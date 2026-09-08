@@ -1,21 +1,21 @@
 from jose import jwt
-from passlib.context import CryptContext
-from app.core.config import settings
+from app.core.config import get_settings
 from datetime import datetime, timedelta, timezone
 from pwdlib import PasswordHash
 
+settings = get_settings()
 
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 password_hash = PasswordHash.recommended()
 
 
 def hash_password(password):
     return password_hash.hash(password)
+
 
 def verify_password(password, hashed_password):
     return password_hash.verify(password, hashed_password)

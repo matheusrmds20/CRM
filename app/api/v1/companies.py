@@ -7,75 +7,105 @@ from app.api.deps import get_db
 from sqlalchemy.orm import Session
 
 
-
 router_companies = APIRouter(prefix="/companies", tags=["companies"])
 
-@router_companies.post("/create", response_model=CompanyResponse)
+def get_company_service(db: Session = Depends(get_db)):
+    return CompanyService(db)
+
+@router_companies.post(
+    "/create",
+    response_model=CompanyResponse,
+    summary="Cria uma nova empresa",
+    description="Cria uma empresa associada ao usuário autenticado.",
+)
 def create_company(
     data: CompanyCreate,
-    db: Session = Depends(get_db),
+    service: CompanyService = Depends(get_company_service),
     current_user: UserDB = Depends(get_current_user),
 ):
-    service = CompanyService(db)
 
     return service.create_company(current_user, data)
 
-@router_companies.get("", response_model=list[CompanyResponse])
+@router_companies.get(
+    "",
+    response_model=list[CompanyResponse],
+    summary="Lista todas as empresas",
+    description="Retorna todas as empresas do usuário autenticado.",
+)
 def get_all_companies(
-    db: Session = Depends(get_db),
+    service: CompanyService = Depends(get_company_service),
     current_user: UserDB = Depends(get_current_user),
 ):
-    service = CompanyService(db)
 
     return service.get_all_companies(current_user)
     
-@router_companies.get("/id/{company_id}", response_model=CompanyResponse)
+@router_companies.get(
+    "/id/{company_id}",
+    response_model=CompanyResponse,
+    summary="Busca empresa por ID",
+    description="Retorna a empresa correspondente ao ID informado.",
+)
 def get_company_by_id(
     company_id: int,
-    db: Session = Depends(get_db),
+    service: CompanyService = Depends(get_company_service),
     current_user: UserDB = Depends(get_current_user),
 ):
-    service = CompanyService(db)
 
-    return service.get_company_by_id(current_user, company_id)
+    return service.get_company_by_id(company_id)
 
-@router_companies.get("/cnpj/{cnpj}", response_model=CompanyResponse)
+@router_companies.get(
+    "/cnpj",
+    response_model=CompanyResponse,
+    summary="Busca empresa por CNPJ",
+    description="Retorna a empresa correspondente ao CNPJ informado.",
+)
 def get_company_by_cnpj(
     cnpj: str,
-    db: Session = Depends(get_db),
+    service: CompanyService = Depends(get_company_service),
     current_user: UserDB = Depends(get_current_user),
 ):
-    service = CompanyService(db)
 
-    return service.get_company_by_cnpj(current_user, cnpj)
+    return service.get_company_by_cnpj(cnpj)
 
-@router_companies.get("/name/{name}", response_model=CompanyResponse)
+@router_companies.get(
+    "/name/{name}",
+    response_model=CompanyResponse,
+    summary="Busca empresa por nome",
+    description="Retorna a empresa correspondente ao nome informado.",
+)
 def get_company_by_name(
     name: str,
-    db: Session = Depends(get_db),
+    service: CompanyService = Depends(get_company_service),
     current_user: UserDB = Depends(get_current_user),
 ):
-    service = CompanyService(db)
 
-    return service.get_company_by_name(current_user, name)
+    return service.get_company_by_name(name)
 
-@router_companies.patch("/{company_id}", response_model=CompanyUpdate)
+@router_companies.patch(
+    "/update/{company_id}",
+    response_model=CompanyResponse,
+    summary="Atualiza uma empresa",
+    description="Atualiza os dados da empresa do usuário autenticado.",
+)
 def update_company(
     company_id: int,
     data: CompanyUpdate,
-    db: Session = Depends(get_db),
+    service: CompanyService = Depends(get_company_service),
     current_user: UserDB = Depends(get_current_user),
 ):
-    service = CompanyService(db)
 
     return service.update_company(current_user, company_id, data)
 
-@router_companies.delete("/{company_id}")
+@router_companies.delete(
+    "/delete/{company_id}",
+    response_model=CompanyResponse,
+    summary="Remove uma empresa",
+    description="Remove a empresa do usuário autenticado pelo ID.",
+)
 def delete_company(
     company_id: int,
-    db: Session = Depends(get_db),
+    service: CompanyService = Depends(get_company_service),
     current_user: UserDB = Depends(get_current_user),
 ):
-    service = CompanyService(db)
 
     return service.delete_company(current_user, company_id)

@@ -2,14 +2,16 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
-from app.db.database import Base
+from app.db.base import Base
 from dotenv import load_dotenv
 import app.models.users
 import app.models.companies
 import app.models.leads
 import app.models.proposals
 import app.models.activities
+from app.core.config import get_settings
 
+settings = get_settings()
 
 load_dotenv()
 
@@ -22,6 +24,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+config.set_main_option('sqlalchemy.url', settings.DATABASE_URL)
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel

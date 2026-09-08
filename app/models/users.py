@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum 
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.db.database import Base
+from app.db.base import Base
 from enum import Enum as PyEnum
 
 
@@ -18,11 +18,10 @@ class UserDB(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
-    is_superuser = Column(Boolean, default=False, nullable=False)
     role = Column(Enum(Roles), default=Roles.SALES, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now() , nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-    leads = relationship("LeadsDB", back_populates="user")
-    proposals = relationship("ProposalDB", back_populates="user")
-    activities = relationship("ActivityDB", back_populates="user")
+    leads = relationship("LeadsDB", back_populates="users", cascade="all, delete-orphan")
+    proposals = relationship("ProposalDB", back_populates="users", cascade="all, delete-orphan")
+    activities = relationship("ActivityDB", back_populates="users", cascade="all, delete-orphan")

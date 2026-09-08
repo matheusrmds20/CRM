@@ -8,72 +8,104 @@ from sqlalchemy.orm import Session
 
 router_activities = APIRouter(prefix="/activities", tags=["activities"])
 
-@router_activities.post("/create", response_model=ActivityResponse)
+def get_activity_service(db: Session = Depends(get_db)):
+    return ActivityService(db)
+
+@router_activities.post(
+    "/create",
+    response_model=ActivityResponse,
+    summary="Cria uma nova atividade",
+    description="Cria uma atividade associada ao usuário autenticado.",
+)
 def create_activity(
     data: ActivityCreate,
-    db: Session = Depends(get_db),
+    service: ActivityService = Depends(get_activity_service),
     current_user: UserDB = Depends(get_current_user),
 ):
-    service = ActivityService(db)
 
-    return service.create_activity(current_user.id, data)
+    return service.create_activity(current_user, data)
 
-@router_activities.get("", response_model=list[ActivityResponse])
-def get_all_activities(
-    db: Session = Depends(get_db),
+
+@router_activities.get(
+    "",
+    response_model=list[ActivityResponse],
+    summary="Lista minhas atividades",
+    description="Retorna todas as atividades do usuário autenticado.",
+)
+def get_my_activities(
+    service: ActivityService = Depends(get_activity_service),
     current_user: UserDB = Depends(get_current_user),
 ):
-    service = ActivityService(db)
 
-    return service.get_all_activities(current_user)
-    
-@router_activities.get("/id/{activity_id}", response_model=ActivityResponse)
+    return service.get_my_activities(current_user)
+
+@router_activities.get(
+    "/id/{activity_id}",
+    response_model=ActivityResponse,
+    summary="Busca atividade por ID",
+    description="Retorna a atividade correspondente ao ID informado.",
+)
 def get_activity_by_id(
     activity_id: int,
-    db: Session = Depends(get_db),
+    service: ActivityService = Depends(get_activity_service),
     current_user: UserDB = Depends(get_current_user),
 ):
-    service = ActivityService(db)
 
     return service.get_activity_by_id(current_user, activity_id)
 
-@router_activities.get("/lead_id/{lead_id}", response_model=ActivityResponse)
+@router_activities.get(
+    "/lead_id/{lead_id}",
+    response_model=list[ActivityResponse],
+    summary="Busca atividades por lead",
+    description="Retorna as atividades de um lead específico.",
+)
 def get_activity_by_lead_id(
     lead_id: int,
-    db: Session = Depends(get_db),
+    service: ActivityService = Depends(get_activity_service),
     current_user: UserDB = Depends(get_current_user),
 ):
-    service = ActivityService(db)
 
     return service.get_activity_by_lead_id(current_user, lead_id)        
 
-@router_activities.get("/user_id/{user_id}", response_model=list[ActivityResponse])
+@router_activities.get(
+    "/user_id/{user_id}",
+    response_model=list[ActivityResponse],
+    summary="Busca atividades por usuário",
+    description="Retorna as atividades de um usuário específico.",
+)
 def get_activity_by_user_id(
     user_id: int,
-    db: Session = Depends(get_db),
+    service: ActivityService = Depends(get_activity_service),
     current_user: UserDB = Depends(get_current_user),
 ):
-    service = ActivityService(db)   
-
+    
     return service.get_activity_by_user_id(current_user, user_id)
 
-@router_activities.patch("/{activity_id}", response_model=ActivityUpdate)
+@router_activities.patch(
+    "/update/{activity_id}",
+    response_model=ActivityResponse,
+    summary="Atualiza uma atividade",
+    description="Atualiza os dados da atividade do usuário autenticado.",
+)
 def update_activity(
     activity_id: int,
     data: ActivityUpdate,
-    db: Session = Depends(get_db),
+    service: ActivityService = Depends(get_activity_service),
     current_user: UserDB = Depends(get_current_user),
 ):
-    service = ActivityService(db)
 
     return service.update_activity(activity_id, current_user, data)
 
-@router_activities.delete("/{activity_id}")
+@router_activities.delete(
+    "/delete/{activity_id}",
+    response_model=ActivityResponse,
+    summary="Remove uma atividade",
+    description="Remove a atividade do usuário autenticado pelo ID.",
+)
 def delete_activity(
     activity_id: int,
-    db: Session = Depends(get_db),
+    service: ActivityService = Depends(get_activity_service),
     current_user: UserDB = Depends(get_current_user),
 ):
-    service = ActivityService(db)
 
     return service.delete_activity(activity_id, current_user)

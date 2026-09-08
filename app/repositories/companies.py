@@ -18,14 +18,14 @@ class CompanyRepository:
         return self.db.query(CompanyDB).filter(CompanyDB.name == name).first()
     
     def get_all_companies(self):
-        return self.db.query(CompanyDB).all()
+        return self.db.query(CompanyDB).filter(CompanyDB.is_active == True).all()
 
 
     def create_company(self, data):
 
         company = CompanyDB(
-            name=data.name.lower(),
-            cnpj=data.cnpj,
+            name=data.name,
+            cnpj=data.cnpj
         )
         try:
             self.db.add(company)
