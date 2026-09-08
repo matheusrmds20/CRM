@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Header } from '../components/layout/Header';
 import { LeadCardDetailed } from '../components/dashboard/LeadCard';
+import { LeadDetailModal } from '../components/leads/LeadDetailModal';
 import { type LeadItem, type LeadStatus } from '../schemas/lead.schema';
 import { leadsService, type LeadApiResponse } from '../services/leads.service';
 import { Filter, ArrowUpDown, Loader2, Search } from 'lucide-react';
@@ -42,6 +43,8 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
   const [selectedStatus, setSelectedStatus] = useState<'Todos os Statuses' | LeadStatus>('Todos os Statuses');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<LeadItem | null>(null);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -57,6 +60,11 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
           status: statusApiToFrontend[l.status] || 'Novo',
           date: new Date(l.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           targetDate: l.updated_at ? new Date(l.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined,
+          email: l.email,
+          phone: l.phone || undefined,
+          subject: l.subject,
+          description: l.description || undefined,
+          estimatedValue: l.estimated_value ?? undefined,
         }));
         setLeads(mapped);
       } catch (err) {
@@ -178,7 +186,14 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredAndSortedLeads.map((lead) => (
-                <LeadCardDetailed key={lead.id} lead={lead} />
+                <LeadCardDetailed
+                  key={lead.id}
+                  lead={lead}
+                  onClick={(clickedLead) => {
+                    setSelectedLead(clickedLead);
+                    setIsLeadModalOpen(true);
+                  }}
+                />
               ))}
             </div>
           )}
@@ -190,6 +205,19 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
           )}
         </main>
       </div>
+
+      {/* Modal de Detalhe do Lead */}
+      <LeadDetailModal
+        lead={selectedLead}
+        isOpen={isLeadModalOpen}
+        onClose={() => {
+          setIsLeadModalOpen(false);
+          setSelectedLead(null);
+        }}
+        onSaved={(updated) => {
+          setLeads((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
+        }}
+      />
     </div>
   );
 };

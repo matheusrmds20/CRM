@@ -3,6 +3,7 @@ import { Sidebar } from '../components/layout/Sidebar';
 import { Header } from '../components/layout/Header';
 import { LeadCard, type Lead } from '../components/dashboard/LeadCard';
 import { CompanyCard, type Company } from '../components/dashboard/CompanyCard';
+import { LeadDetailModal } from '../components/leads/LeadDetailModal';
 import { leadsService } from '../services/leads.service';
 import { companiesService } from '../services/companies.service';
 import { Loader2 } from 'lucide-react';
@@ -28,6 +29,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,6 +49,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           avatar: avatarUrls[index % avatarUrls.length],
           status: statusApiToFrontend[l.status] || 'Novo',
           date: new Date(l.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          email: l.email,
+          phone: l.phone || undefined,
+          subject: l.subject,
+          description: l.description || undefined,
+          estimatedValue: l.estimated_value ?? undefined,
         }));
 
         const iconTypes: Array<Company['iconType']> = ['tree', 'gear', 'novo', 'building'];
@@ -88,7 +96,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             ) : leads.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {leads.map((lead) => (
-                  <LeadCard key={lead.id} lead={lead} />
+                  <LeadCard
+                    key={lead.id}
+                    lead={lead}
+                    onClick={(clickedLead) => {
+                      setSelectedLead(clickedLead);
+                      setIsLeadModalOpen(true);
+                    }}
+                  />
                 ))}
               </div>
             ) : (
@@ -132,6 +147,19 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           </section>
         </main>
       </div>
+
+      {/* Modal de Detalhe do Lead */}
+      <LeadDetailModal
+        lead={selectedLead}
+        isOpen={isLeadModalOpen}
+        onClose={() => {
+          setIsLeadModalOpen(false);
+          setSelectedLead(null);
+        }}
+        onSaved={(updated) => {
+          setLeads((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
+        }}
+      />
     </div>
   );
 };
