@@ -83,19 +83,19 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
 
   const handleSaveCompany = async (formData: CompanyFormData) => {
     try {
-      // Gera um CNPJ válido aleatório para cadastro caso o usuário forneça setor/cnpj simples
-      const cnpjValido = formData.sector.replace(/\D/g, '').length === 14 
-        ? formData.sector 
-        : '12.345.678/0001-95';
-
       if (editingCompany) {
         await companiesService.update(Number(editingCompany.id), {
           name: formData.name,
         });
       } else {
+        const cnpj = formData.sector?.trim() || '';
+        if (!cnpj) {
+          alert('Informe o CNPJ da empresa.');
+          return;
+        }
         await companiesService.create({
           name: formData.name,
-          cnpj: cnpjValido,
+          cnpj,
         });
       }
       await fetchCompanies();
@@ -145,7 +145,6 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
                     <th className="py-3.5 px-6 rounded-l-2xl">Empresa</th>
                     <th className="py-3.5 px-6">CNPJ / Ramo</th>
                     <th className="py-3.5 px-6">Criado em</th>
-                    <th className="py-3.5 px-6">Contato Principal</th>
                     <th className="py-3.5 px-6 text-center rounded-r-2xl">Ações</th>
                   </tr>
                 </thead>
@@ -181,11 +180,6 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
                           {company.lastActivity}
                         </td>
 
-                        {/* Contato Principal */}
-                        <td className="py-4 px-6 text-sm">
-                          {company.mainContact}
-                        </td>
-
                         {/* Ações */}
                         <td className="py-4 px-6 rounded-r-2xl text-center">
                           <div className="flex items-center justify-center gap-2">
@@ -210,7 +204,7 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
                   })}
                   {companies.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="py-10 text-center text-[#7D7068] bg-[#EFE8DC]/40 rounded-2xl">
+                      <td colSpan={4} className="py-10 text-center text-[#7D7068] bg-[#EFE8DC]/40 rounded-2xl">
                         Nenhuma empresa cadastrada. Clique em "Adicionar Nova Empresa" para começar.
                       </td>
                     </tr>

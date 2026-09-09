@@ -1,4 +1,4 @@
-﻿import React, { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useState, useCallback, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,7 +28,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
     defaultValues: {
       name: '',
       sector: '',
-      lastActivity: 'Hoje, 10:00',
+      lastActivity: '',
       mainContact: '',
       status: 'Ativo',
       description: '',
@@ -140,23 +140,22 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
               <p className="text-xs text-red-500 mt-1 ml-1">{errors.name.message}</p>
             )}
           </div>
-
-
-          {/* Contato Principal */}
+          {/* CNPJ */}
           <div>
             <label className="block text-xs font-semibold text-[#48372F] mb-1.5 ml-1">
-              Contato Principal
+              CNPJ <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
-              placeholder="Ex: Maria Ferreira"
-              {...register('mainContact')}
+              placeholder="Ex: 11.222.333/0001-81"
+              {...register('sector')}
               className={`w-full px-4 py-2.5 bg-[#F4F1EA] border ${
-                errors.mainContact ? 'border-red-400' : 'border-[#B8AA9A]'
+                errors.sector ? 'border-red-400' : 'border-[#B8AA9A]'
               } rounded-xl text-sm text-[#3B2317] focus:outline-none focus:ring-2 focus:ring-[#77917B]/20`}
             />
-            {errors.mainContact && (
-              <p className="text-xs text-red-500 mt-1 ml-1">{errors.mainContact.message}</p>
+            <p className="text-[10px] text-[#8A7B72] mt-1 ml-1">Digite um CNPJ válido com ou sem pontuação.</p>
+            {errors.sector && (
+              <p className="text-xs text-red-500 mt-1 ml-1">{errors.sector.message}</p>
             )}
           </div>
 

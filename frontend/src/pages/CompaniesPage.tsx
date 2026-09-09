@@ -63,7 +63,7 @@ export const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
             </div>
 
             {/* Filtro */}
-            <button 
+            <button
               title="Filtrar Empresas"
               className="p-2.5 text-[#5A4B42] hover:text-[#3B2317] hover:bg-[#EFE8DC] rounded-xl border border-[#DFD6C7] transition-all cursor-pointer"
             >
@@ -99,3 +99,4 @@ export const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
     </div>
   );
 };
+

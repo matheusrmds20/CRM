@@ -1,7 +1,7 @@
 from app.repositories.leads import LeadsRepository
 from app.schemas.leads import LeadCreate, LeadUpdate
 from sqlalchemy.orm import Session
-from app.api.exceps import ItemNotFoundError, BadRequestError, NoPermissionError
+from app.api.exceps import ItemNotFoundError, BadRequestError, NoPermissionError, ItemAlreadyExistsError
 from app.utils.pagination import paginate
 from app.utils.permissions import can_manage, can_manage_admin
 
@@ -13,7 +13,7 @@ class LeadsService:
     def create_lead(self, user, data: LeadCreate):
         lead_already_exists = self.repository.get_lead_by_email(data.email)
         if lead_already_exists:
-            raise BadRequestError("Lead ja existe")
+            raise ItemAlreadyExistsError("Lead ja existe")
 
         data.name = data.name.lower()
 

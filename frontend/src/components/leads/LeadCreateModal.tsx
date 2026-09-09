@@ -42,17 +42,34 @@ export const LeadCreateModal: React.FC<LeadCreateModalProps> = ({
     },
   });
 
+  const [apiError, setApiError] = React.useState<string | null>(null);
+
   useEffect(() => {
     if (isOpen) {
       reset();
+      setApiError(null);
     }
   }, [isOpen, reset]);
 
   const submit = async (data: LeadCreateFormData) => {
-    await onSave({
-      ...data,
-      description: data.description?.trim() || undefined,
-    });
+    setApiError(null);
+    try {
+      await onSave({
+        ...data,
+        description: data.description?.trim() || undefined,
+      });
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.detail;
+
+      if (status === 409) {
+        setApiError('Já existe um lead cadastrado com este e-mail.');
+      } else if (detail) {
+        setApiError(typeof detail === 'string' ? detail : 'Erro ao criar lead. Tente novamente.');
+      } else {
+        setApiError('Erro inesperado ao criar lead. Tente novamente.');
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -155,6 +172,14 @@ export const LeadCreateModal: React.FC<LeadCreateModalProps> = ({
             <textarea rows={3} placeholder="Contexto ou próximos passos" {...register('description')} className={`${inputClass(Boolean(errors.description))} resize-y`} />
             {errors.description && <p className="text-xs text-red-500 mt-1 ml-1">{errors.description.message}</p>}
           </div>
+
+          {/* Erro da API */}
+          {apiError && (
+            <div className="flex items-start gap-2.5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium">
+              <span className="mt-0.5 shrink-0">⚠️</span>
+              <span>{apiError}</span>
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E3DBD0]">
             <button type="button" onClick={onClose} disabled={isSaving} className="px-5 py-2.5 text-xs font-semibold text-[#685A52] hover:bg-[#EAE4D9] rounded-full transition-colors cursor-pointer disabled:opacity-50">Cancelar</button>
