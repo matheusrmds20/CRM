@@ -19,6 +19,13 @@ class UserUpdateUsername(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+class UserUpdate(BaseModel):
+    username: str = Field(min_length=3, max_length=20)
+    role: Roles
+
+    model_config = ConfigDict(from_attributes=True)
+
 class UserUpdatePassword(BaseModel):
     current_password: str = Field(min_length=8, max_length=20)
     new_password: str = Field(min_length=8, max_length=20)

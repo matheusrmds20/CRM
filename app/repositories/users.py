@@ -12,6 +12,7 @@ class UserRepository:
             username=data.username,
             hashed_password=data.password,
             is_active=data.is_active,
+            role=data.role,
         )
         try:
 
@@ -41,6 +42,19 @@ class UserRepository:
 
 
         user.username = new_username
+
+        try:
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+        except IntegrityError as e:
+            self.db.rollback()
+            raise e
+
+    def update_user(self, user_id: int, username: str, role):
+        user = self.get_user_by_id(user_id)
+        user.username = username
+        user.role = role
 
         try:
             self.db.commit()

@@ -1,6 +1,13 @@
 import { api } from './api';
 import { type UserResponse } from './auth.service';
 
+export type AdminUserRole = 'admin' | 'manager' | 'sales';
+
+export interface UserUpdatePayload {
+  username: string;
+  role: AdminUserRole;
+}
+
 export interface UserUpdateUsernamePayload {
   username: string;
 }
@@ -23,6 +30,11 @@ export const usersService = {
 
   async updateUsername(userId: number, payload: UserUpdateUsernamePayload): Promise<UserResponse> {
     const response = await api.patch<UserResponse>(`/users/update_username/${userId}`, payload);
+    return response.data;
+  },
+
+  async updateUser(userId: number, payload: UserUpdatePayload): Promise<UserResponse> {
+    const response = await api.patch<UserResponse>(`/users/update/${userId}`, payload);
     return response.data;
   },
 

@@ -16,7 +16,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPath = 'dashboard', onN
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'empresas', label: 'Empresas', icon: Building2 },
     { id: 'leads', label: 'Leads', icon: Users },
-    { id: 'config', label: 'Config', icon: Settings },
+    { id: 'config', label: 'Configurações', icon: Settings },
   ];
 
   return (

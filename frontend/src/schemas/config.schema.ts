@@ -15,11 +15,17 @@ export type ProfileSettingsFormData = z.infer<typeof profileSettingsSchema>;
 
 // Schema para Criação de Usuário (Admin)
 export const createUserSchema = z.object({
-  fullName: z.string().min(2, 'O nome completo é obrigatório'),
-  email: z.string().email('E-mail inválido'),
+  username: z.string()
+    .min(3, 'O usuário deve ter pelo menos 3 caracteres')
+    .max(20, 'O usuário deve ter no máximo 20 caracteres'),
+  password: z.string().min(8, 'A senha deve ter no mínimo 8 caracteres'),
+  confirmPassword: z.string().min(1, 'Confirme a senha'),
   role: z.enum(['admin', 'sales', 'manager', 'viewer'], {
     error: 'Selecione um perfil válido',
   }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'As senhas não coincidem',
+  path: ['confirmPassword'],
 });
 
 export type CreateUserFormData = z.infer<typeof createUserSchema>;

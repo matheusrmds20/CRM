@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from app.services.users import UserService
-from app.schemas.users import UserResponse, UserUpdateUsername, UserUpdatePassword
+from app.schemas.users import UserResponse, UserUpdate, UserUpdateUsername, UserUpdatePassword
 from app.api.deps import get_current_user
 from app.models.users import UserDB
 from app.api.deps import get_db
@@ -94,6 +94,20 @@ def update_username(
 ):
 
     return service.update_username(current_user, data, target_user_id)
+
+
+@router_user.patch(
+    "/update/{target_user_id}",
+    response_model=UserResponse,
+    summary="Atualiza um usuário",
+)
+def update_user(
+    target_user_id: int,
+    data: UserUpdate,
+    service: UserService = Depends(get_user_service),
+    current_user: UserDB = Depends(get_current_user),
+):
+    return service.update_user(current_user, data, target_user_id)
 
 
 @router_user.patch(

@@ -1,5 +1,5 @@
 from app.repositories.users import UserRepository
-from app.schemas.users import UserUpdateUsername, UserUpdatePassword, UserCreate
+from app.schemas.users import UserUpdate, UserUpdateUsername, UserUpdatePassword, UserCreate
 from sqlalchemy.orm import Session
 from app.api.exceps import BadRequestError, NoPermissionError, ItemNotFoundError
 from app.core.security import verify_password, hash_password
@@ -77,6 +77,20 @@ class UserService:
 
 
         return self.repository.update_username(target_id, data.username)
+
+    def update_user(self, user, data: UserUpdate, target_user_id: int):
+        if not can_manage_admin(user):
+            raise NoPermissionError("Voce nao tem permissao para executar essa acao")
+
+        user_repo = self.repository.get_user_by_id(target_user_id)
+        if not user_repo:
+            raise ItemNotFoundError("Usuario nao encontrado")
+
+        existing_user = self.repository.get_user_by_username(data.username)
+        if existing_user and existing_user.id != target_user_id:
+            raise BadRequestError("Usuário ja existente")
+
+        return self.repository.update_user(target_user_id, data.username, data.role)
 
     def update_password(self, user, data: UserUpdatePassword, target_user_id: int):
         target_id = target_user_id if target_user_id is not None else user.id

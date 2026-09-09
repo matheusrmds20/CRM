@@ -37,11 +37,9 @@ export const LeadCard: React.FC<LeadCardDetailedProps> = ({ lead, onClick }) => 
       <div>
         {/* Info do Contato */}
         <div className="flex items-center gap-3.5 mb-3.5">
-          <img
-            src={lead.avatar}
-            alt={lead.name}
-            className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm shrink-0"
-          />
+          <div className="w-12 h-12 rounded-full bg-[#98AE9D] text-white font-bold flex items-center justify-center border-2 border-white shadow-sm shrink-0">
+            {lead.name.charAt(0).toUpperCase()}
+          </div>
           <div className="overflow-hidden">
             <h4 className="font-bold text-[#3B2317] text-base leading-tight truncate">
               {lead.name}
@@ -63,7 +61,7 @@ export const LeadCard: React.FC<LeadCardDetailedProps> = ({ lead, onClick }) => 
 
       {/* Datas */}
       <div className="flex items-center justify-between text-xs text-[#7D7068] font-medium border-t border-[#DFD6C7] pt-2.5 mt-1">
-        <span>Date: {lead.date}</span>
+        <span>Data: {lead.date}</span>
         {lead.targetDate && <span>{lead.targetDate}</span>}
       </div>
     </div>

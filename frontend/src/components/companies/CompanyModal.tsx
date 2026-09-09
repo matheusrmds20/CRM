@@ -1,5 +1,6 @@
 ﻿import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useState, useCallback, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { X, Building2 } from 'lucide-react';
 import { companySchema, type CompanyFormData, type CompanyItem } from '../../schemas/company.schema';
@@ -36,6 +37,39 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
     },
   });
 
+  const [isClosing, setIsClosing] = useState(false);
+  const closeTimeoutRef = useRef<number | null>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  const closeModal = useCallback(() => {
+    if (closeTimeoutRef.current !== null) window.clearTimeout(closeTimeoutRef.current);
+    setIsClosing(true);
+    closeTimeoutRef.current = window.setTimeout(() => {
+      closeTimeoutRef.current = null;
+      onCloseRef.current();
+    }, 250);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (closeTimeoutRef.current !== null) window.clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+      setIsClosing(false);
+    }
+    return () => {
+      if (closeTimeoutRef.current !== null) window.clearTimeout(closeTimeoutRef.current);
+    };
+  }, [isOpen]);
+
+  const handleFormSubmit = async (data: CompanyFormData) => {
+    await onSave(data);
+    closeModal();
+  };
+
   useEffect(() => {
     if (initialData) {
       reset({
@@ -66,8 +100,8 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-      <div className="relative w-full max-w-lg bg-[#FAF6F0] rounded-3xl border-[2px] border-[#1F1E1C] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-md ${isClosing ? 'animate-overlay-exit' : 'animate-overlay-fade'}`}>
+      <div className={`relative w-full max-w-lg bg-[#FAF6F0] rounded-[2rem] border border-[#E3DBD0] shadow-[0_25px_60px_-15px_rgba(59,35,23,0.35)] overflow-hidden ${isClosing ? 'animate-modal-exit' : 'animate-modal-enter'} hover:shadow-[0_30px_70px_-15px_rgba(59,35,23,0.45)]`}>
         
         {/* Header do Modal */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#E3DBD0] bg-[#EFE8DC]">
@@ -80,7 +114,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
             </h3>
           </div>
           <button
-            onClick={onClose}
+            onClick={closeModal}
             className="p-1.5 text-[#7D7068] hover:text-[#3B2317] hover:bg-black/5 rounded-full transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -88,7 +122,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
         </div>
 
         {/* Formulário */}
-        <form onSubmit={handleSubmit(onSave)} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6 space-y-4">
           {/* Nome da Empresa */}
           <div>
             <label className="block text-xs font-semibold text-[#48372F] mb-1.5 ml-1">
@@ -99,7 +133,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
               placeholder="Ex: Oliveira & Filhos"
               {...register('name')}
               className={`w-full px-4 py-2.5 bg-[#F4F1EA] border ${
-                errors.name ? 'border-red-400' : 'border-[#BACBB9]'
+                errors.name ? 'border-red-400' : 'border-[#B8AA9A]'
               } rounded-xl text-sm text-[#3B2317] focus:outline-none focus:ring-2 focus:ring-[#77917B]/20`}
             />
             {errors.name && (
@@ -107,23 +141,6 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
             )}
           </div>
 
-          {/* Ramo de Atividade */}
-          <div>
-            <label className="block text-xs font-semibold text-[#48372F] mb-1.5 ml-1">
-              Ramo de Atividade
-            </label>
-            <input
-              type="text"
-              placeholder="Ex: Consultoria Agrícola, Construção Civil..."
-              {...register('sector')}
-              className={`w-full px-4 py-2.5 bg-[#F4F1EA] border ${
-                errors.sector ? 'border-red-400' : 'border-[#BACBB9]'
-              } rounded-xl text-sm text-[#3B2317] focus:outline-none focus:ring-2 focus:ring-[#77917B]/20`}
-            />
-            {errors.sector && (
-              <p className="text-xs text-red-500 mt-1 ml-1">{errors.sector.message}</p>
-            )}
-          </div>
 
           {/* Contato Principal */}
           <div>
@@ -135,7 +152,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
               placeholder="Ex: Maria Ferreira"
               {...register('mainContact')}
               className={`w-full px-4 py-2.5 bg-[#F4F1EA] border ${
-                errors.mainContact ? 'border-red-400' : 'border-[#BACBB9]'
+                errors.mainContact ? 'border-red-400' : 'border-[#B8AA9A]'
               } rounded-xl text-sm text-[#3B2317] focus:outline-none focus:ring-2 focus:ring-[#77917B]/20`}
             />
             {errors.mainContact && (
@@ -153,7 +170,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
               placeholder="Ex: 27 Out, 16:30"
               {...register('lastActivity')}
               className={`w-full px-4 py-2.5 bg-[#F4F1EA] border ${
-                errors.lastActivity ? 'border-red-400' : 'border-[#BACBB9]'
+                errors.lastActivity ? 'border-red-400' : 'border-[#B8AA9A]'
               } rounded-xl text-sm text-[#3B2317] focus:outline-none focus:ring-2 focus:ring-[#77917B]/20`}
             />
           </div>
@@ -162,7 +179,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E3DBD0]">
             <button
               type="button"
-              onClick={onClose}
+              onClick={closeModal}
               className="px-5 py-2.5 text-xs font-semibold text-[#685A52] hover:bg-[#EAE4D9] rounded-full transition-colors cursor-pointer"
             >
               Cancelar

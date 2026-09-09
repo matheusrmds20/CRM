@@ -51,7 +51,7 @@ export const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
 
       {/* Conteúdo Principal */}
       <div className="flex-1 flex flex-col overflow-y-auto">
-        <Header userName="Maria Silva" />
+        <Header userName="Maria Silva" onNavigate={onNavigate} />
 
         <main className="p-8 sm:p-10 space-y-8 max-w-7xl">
           {/* Header da Página */}

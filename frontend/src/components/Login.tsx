@@ -67,10 +67,10 @@ export const LoginCard: React.FC<LoginCardProps> = ({ onSuccessLogin }) => {
       <div className="bg-[#FAF6F0] p-8 sm:p-12 flex flex-col justify-center">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-[#3B2317] tracking-tight mb-2">
-            Welcome Back
+            Boas-vindas de volta
           </h1>
           <p className="text-sm text-[#73635B]">
-            Log in to your CRM dashboard
+            Entre no seu painel de CRM
           </p>
         </div>
 
@@ -78,13 +78,13 @@ export const LoginCard: React.FC<LoginCardProps> = ({ onSuccessLogin }) => {
           {/* Username Field */}
           <div>
             <label className="block text-xs font-semibold text-[#48372F] mb-1.5 ml-1">
-              Username
+              Usuário
             </label>
             <div className="relative flex items-center">
               <User className="absolute left-3.5 w-4 h-4 text-[#8B988C]" />
               <input
                 type="text"
-                placeholder="Username"
+                placeholder="Usuário"
                 {...register('username')}
                 className={`w-full pl-10 pr-4 py-2.5 bg-[#F4F1EA] border ${
                   errors.username ? 'border-red-400 focus:border-red-500' : 'border-[#A3B3A5] focus:border-[#77917B]'
@@ -99,13 +99,13 @@ export const LoginCard: React.FC<LoginCardProps> = ({ onSuccessLogin }) => {
           {/* Password Field */}
           <div>
             <label className="block text-xs font-semibold text-[#48372F] mb-1.5 ml-1">
-              Password
+              Senha
             </label>
             <div className="relative flex items-center">
               <Lock className="absolute left-3.5 w-4 h-4 text-[#8B988C]" />
               <input
                 type="password"
-                placeholder="Password"
+                placeholder="Senha"
                 {...register('password')}
                 className={`w-full pl-10 pr-4 py-2.5 bg-[#F4F1EA] border ${
                   errors.password ? 'border-red-400 focus:border-red-500' : 'border-[#A3B3A5] focus:border-[#77917B]'
@@ -124,7 +124,7 @@ export const LoginCard: React.FC<LoginCardProps> = ({ onSuccessLogin }) => {
               disabled={isSubmitting}
               className="w-full py-3 bg-[#B75828] hover:bg-[#A14A1E] active:scale-[0.99] text-white font-medium rounded-full shadow-md transition-all text-sm tracking-wide cursor-pointer"
             >
-              Sign In
+              Entrar
             </button>
           </div>
 
@@ -134,7 +134,7 @@ export const LoginCard: React.FC<LoginCardProps> = ({ onSuccessLogin }) => {
               href="#forgot-password"
               className="text-xs text-[#7B6C64] hover:text-[#3B2317] hover:underline transition-colors"
             >
-              Forgot password?
+              Esqueceu a senha?
             </a>
           </div>
         </form>

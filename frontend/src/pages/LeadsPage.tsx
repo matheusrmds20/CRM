@@ -2,10 +2,12 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Header } from '../components/layout/Header';
 import { LeadCardDetailed } from '../components/dashboard/LeadCard';
+import { LeadCreateModal } from '../components/leads/LeadCreateModal';
 import { LeadDetailModal } from '../components/leads/LeadDetailModal';
-import { type LeadItem, type LeadStatus } from '../schemas/lead.schema';
+import { type LeadCreateFormData, type LeadItem, type LeadStatus } from '../schemas/lead.schema';
 import { leadsService, type LeadApiResponse } from '../services/leads.service';
-import { Filter, ArrowUpDown, Loader2, Search } from 'lucide-react';
+import { companiesService, type CompanyApiResponse } from '../services/companies.service';
+import { Filter, ArrowUpDown, Loader2, Plus, Search } from 'lucide-react';
 
 const allStatuses: Array<'Todos os Statuses' | LeadStatus> = [
   'Todos os Statuses',
@@ -24,13 +26,20 @@ const statusApiToFrontend: Record<string, LeadStatus> = {
   lost: 'Perdido',
 };
 
-const avatarUrls = [
-  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&auto=format&fit=crop&q=80',
-];
+const mapLead = (lead: LeadApiResponse): LeadItem => ({
+  id: lead.id.toString(),
+  name: lead.name,
+  role: lead.subject || 'Cliente Potencial',
+  company: lead.description || (lead.company_id ? `Empresa #${lead.company_id}` : 'Sem Empresa'),
+  status: statusApiToFrontend[lead.status] || 'Novo',
+  date: new Date(lead.created_at).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }),
+  targetDate: lead.updated_at ? new Date(lead.updated_at).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }) : undefined,
+  email: lead.email,
+  phone: lead.phone || undefined,
+  subject: lead.subject,
+  description: lead.description || undefined,
+  estimatedValue: lead.estimated_value ?? undefined,
+});
 
 interface LeadsPageProps {
   onNavigate?: (path: string) => void;
@@ -45,37 +54,51 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<LeadItem | null>(null);
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [companies, setCompanies] = useState<CompanyApiResponse[]>([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreatingLead, setIsCreatingLead] = useState(false);
 
   useEffect(() => {
-    const fetchLeads = async () => {
-      try {
-        setIsLoading(true);
-        const data = await leadsService.getAll();
-        const mapped: LeadItem[] = data.map((l: LeadApiResponse, index: number) => ({
-          id: l.id.toString(),
-          name: l.name,
-          role: l.subject || 'Cliente Potencial',
-          company: l.description || (l.company_id ? `Empresa #${l.company_id}` : 'Sem Empresa'),
-          avatar: avatarUrls[index % avatarUrls.length],
-          status: statusApiToFrontend[l.status] || 'Novo',
-          date: new Date(l.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          targetDate: l.updated_at ? new Date(l.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined,
-          email: l.email,
-          phone: l.phone || undefined,
-          subject: l.subject,
-          description: l.description || undefined,
-          estimatedValue: l.estimated_value ?? undefined,
-        }));
-        setLeads(mapped);
-      } catch (err) {
-        console.error('Erro ao buscar leads:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    let isMounted = true;
 
-    fetchLeads();
+    Promise.all([leadsService.getAll(), companiesService.getAll()])
+      .then(([leadData, companyData]) => {
+        if (!isMounted) return;
+        setLeads(leadData.map(mapLead));
+        setCompanies(companyData);
+      })
+      .catch((err) => console.error('Erro ao carregar dados de leads:', err))
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  const handleCreateLead = async (data: LeadCreateFormData) => {
+    setIsCreatingLead(true);
+    try {
+      const created = await leadsService.create({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        company_id: data.companyId ?? null,
+        subject: data.subject,
+        description: data.description || null,
+        estimated_value: data.estimatedValue,
+        status: data.status,
+      });
+      setLeads((current) => [mapLead(created), ...current]);
+      setIsCreateModalOpen(false);
+    } catch (err) {
+      console.error('Erro ao criar lead:', err);
+      throw err;
+    } finally {
+      setIsCreatingLead(false);
+    }
+  };
 
   // Filtragem por status, busca por texto e Ordenação dos Leads
   const filteredAndSortedLeads = useMemo(() => {
@@ -112,7 +135,7 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
 
       {/* Área Central */}
       <div className="flex-1 flex flex-col overflow-y-auto">
-        <Header userName="Maria Silva" />
+        <Header userName="Maria Silva" onNavigate={onNavigate} />
 
         <main className="p-8 sm:p-10 space-y-8 max-w-7xl">
           {/* Header da Página com Título, Busca, Filtro e Ordenação */}
@@ -122,6 +145,14 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
             </h2>
 
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 relative">
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#BA5827] hover:bg-[#A14A1E] active:scale-[0.99] text-white font-medium text-sm rounded-2xl shadow-md hover:shadow-lg transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Criar Lead</span>
+              </button>
+
               {/* Barra de Busca de Leads */}
               <div className="relative flex items-center">
                 <Search className="absolute left-3.5 w-4 h-4 text-[#8C988D]" />
@@ -217,6 +248,14 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
         onSaved={(updated) => {
           setLeads((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
         }}
+      />
+
+      <LeadCreateModal
+        companies={companies}
+        isOpen={isCreateModalOpen}
+        isSaving={isCreatingLead}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSave={handleCreateLead}
       />
     </div>
   );

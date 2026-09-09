@@ -15,12 +15,6 @@ const statusApiToFrontend: Record<string, 'Novo' | 'Em Contato' | 'Ganho' | 'Per
   lost: 'Perdido',
 };
 
-const avatarUrls = [
-  'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
-];
-
 interface DashboardPageProps {
   onNavigate?: (path: string) => void;
 }
@@ -41,14 +35,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           companiesService.getAll().catch(() => []),
         ]);
 
-        const mappedLeads: Lead[] = leadsData.slice(0, 3).map((l, index) => ({
+        const mappedLeads: Lead[] = leadsData.slice(0, 3).map((l) => ({
           id: l.id.toString(),
           name: l.name,
           role: l.subject || 'Cliente Potencial',
           company: l.description || (l.company_id ? `Empresa #${l.company_id}` : 'Sem Empresa'),
-          avatar: avatarUrls[index % avatarUrls.length],
           status: statusApiToFrontend[l.status] || 'Novo',
-          date: new Date(l.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          date: new Date(l.created_at).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }),
           email: l.email,
           phone: l.phone || undefined,
           subject: l.subject,
@@ -81,13 +74,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
       {/* Área Central de Conteúdo */}
       <div className="flex-1 flex flex-col overflow-y-auto">
-        <Header userName="Maria Silva" />
+        <Header userName="Maria Silva" onNavigate={onNavigate} />
 
         <main className="p-8 sm:p-10 space-y-10 max-w-7xl">
           {/* Seção Recent Leads */}
           <section>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-xl font-bold text-[#3B2317]">Recent Leads</h3>
+              <h3 className="text-xl font-bold text-[#3B2317]">Leads recentes</h3>
             </div>
             {isLoading ? (
               <div className="flex items-center justify-center py-12 bg-[#EFE8DC]/50 rounded-3xl">
@@ -116,7 +109,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           {/* Seção Linked Companies & Funil */}
           <section>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-xl font-bold text-[#3B2317]">Linked Companies</h3>
+              <h3 className="text-xl font-bold text-[#3B2317]">Empresas vinculadas</h3>
               
               {/* Funil visual decorativo estilizado */}
               <div className="flex items-center gap-2">

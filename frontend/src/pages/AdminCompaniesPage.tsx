@@ -4,7 +4,7 @@ import { Header } from '../components/layout/Header';
 import { CompanyModal } from '../components/companies/CompanyModal';
 import { type CompanyItem, type CompanyFormData } from '../schemas/company.schema';
 import { companiesService } from '../services/companies.service';
-import { Plus, Edit3, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Edit3, Trash2, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface AdminCompaniesPageProps {
   onNavigate?: (path: string) => void;
@@ -15,6 +15,8 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<CompanyItem | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const companiesPerPage = 10;
 
   const fetchCompanies = async () => {
     try {
@@ -35,6 +37,7 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
         };
       });
       setCompanies(mappedCompanies);
+      setCurrentPage(1);
     } catch (err) {
       console.error('Erro ao buscar empresas:', err);
     } finally {
@@ -45,6 +48,16 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
   useEffect(() => {
     fetchCompanies();
   }, []);
+
+  const totalPages = Math.ceil(companies.length / companiesPerPage);
+  const firstCompanyIndex = (currentPage - 1) * companiesPerPage;
+  const visibleCompanies = companies.slice(firstCompanyIndex, firstCompanyIndex + companiesPerPage);
+
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const handleCreateNew = () => {
     setEditingCompany(null);
@@ -85,8 +98,6 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
           cnpj: cnpjValido,
         });
       }
-      setIsModalOpen(false);
-      setEditingCompany(null);
       await fetchCompanies();
     } catch (err: any) {
       console.error('Erro ao salvar empresa:', err);
@@ -101,7 +112,7 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
 
       {/* Conteúdo Principal */}
       <div className="flex-1 flex flex-col overflow-y-auto">
-        <Header userName="Maria Silva" />
+        <Header userName="Maria Silva" onNavigate={onNavigate} />
 
         <main className="p-8 sm:p-10 space-y-6 max-w-7xl">
           {/* Header da Página com Título e Botão de Adicionar */}
@@ -141,8 +152,8 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
 
                 {/* Linhas de Empresas */}
                 <tbody>
-                  {companies.map((company, index) => {
-                    const isTerracotta = index % 2 === 0;
+                  {visibleCompanies.map((company, index) => {
+                    const isTerracotta = (firstCompanyIndex + index) % 2 === 0;
                     const rowClass = isTerracotta
                       ? 'bg-[#B75828] text-white'
                       : 'bg-[#98AE9D] text-[#222E24] font-medium';
@@ -210,21 +221,55 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
           </div>
 
           {/* Paginação */}
-          <div className="flex items-center justify-center gap-4 pt-4 text-xs font-semibold text-[#685A52]">
-            <span>Páginas:</span>
-            <button className="text-[#3B2317] font-bold underline cursor-pointer">1</button>
-            <button className="hover:text-[#3B2317] cursor-pointer">2</button>
-            <button className="hover:text-[#3B2317] cursor-pointer">3</button>
-            <span>...</span>
-            <button className="hover:text-[#3B2317] cursor-pointer">Próxima</button>
-          </div>
+          {totalPages > 1 && (
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-4 text-sm font-semibold text-[#685A52]">
+              <button
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                disabled={currentPage === 1}
+                aria-label="Página anterior"
+                className="flex items-center gap-1 rounded-xl border border-[#DFD6C7] bg-white px-3 py-2 transition-colors hover:bg-[#EFE8DC] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Anterior</span>
+              </button>
+
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  aria-label={`Ir para a página ${page}`}
+                  aria-current={currentPage === page ? 'page' : undefined}
+                  className={`h-9 min-w-9 rounded-xl border px-3 transition-colors ${
+                    currentPage === page
+                      ? 'border-[#BA5827] bg-[#BA5827] text-white shadow-sm'
+                      : 'border-[#DFD6C7] bg-white text-[#685A52] hover:bg-[#EFE8DC] hover:text-[#3B2317]'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                disabled={currentPage === totalPages}
+                aria-label="Próxima página"
+                className="flex items-center gap-1 rounded-xl border border-[#DFD6C7] bg-white px-3 py-2 transition-colors hover:bg-[#EFE8DC] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <span className="hidden sm:inline">Próxima</span>
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </main>
       </div>
 
       {/* Modal de CRUD */}
       <CompanyModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingCompany(null);
+        }}
         onSave={handleSaveCompany}
         initialData={editingCompany}
       />

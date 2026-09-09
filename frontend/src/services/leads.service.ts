@@ -32,12 +32,12 @@ export interface LeadCreatePayload {
 export interface LeadUpdatePayload {
   name?: string;
   email?: string;
-  phone?: string;
+  phone?: string | null;
   company_id?: number | null;
   status?: LeadStatusApi;
   subject?: string;
   description?: string | null;
-  estimated_value?: number;
+  estimated_value?: number | null;
   is_active?: boolean;
 }
 
