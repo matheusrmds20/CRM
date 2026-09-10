@@ -1,75 +1,72 @@
-# React + TypeScript + Vite
+# Frontend — CRM de Vendas
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interface web do CRM de Vendas, desenvolvida em React, TypeScript e Vite. A aplicacao permite autenticar usuarios, acompanhar leads, empresas, atividades e propostas, alem de administrar usuarios conforme o perfil de acesso.
 
-Currently, two official plugins are available:
+## Tecnologias
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19 e TypeScript
+- Vite
+- Axios
+- React Hook Form e Zod
+- Tailwind CSS
+- ESLint
 
-## React Compiler
+## Pre-requisitos
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Node.js 20 ou superior
+- API do CRM em execucao (por padrao, em `http://localhost:8000`)
 
-## Expanding the ESLint configuration
+## Configuracao
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Instale as dependencias:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```powershell
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Por padrao, o cliente HTTP usa `http://localhost:8000/api/v1`. Para usar outra instancia, crie um arquivo `.env` nesta pasta:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```env
+VITE_API_URL=http://localhost:8000/api/v1
 ```
+
+## Execucao
+
+```powershell
+npm run dev
+```
+
+O Vite exibira a URL local da interface, normalmente `http://localhost:5173`.
+
+## Scripts
+
+| Comando | Descricao |
+| --- | --- |
+| `npm run dev` | Inicia o servidor de desenvolvimento. |
+| `npm run build` | Executa a verificacao de tipos e gera a versao de producao. |
+| `npm run lint` | Executa a analise estatica com ESLint. |
+| `npm run preview` | Publica localmente o build gerado. |
+
+## Funcionalidades
+
+- Login com token JWT persistido localmente.
+- Dashboard com leads e empresas.
+- Criacao, edicao e remocao de leads.
+- Criacao, edicao e remocao de empresas para administradores.
+- Registro, edicao e remocao de atividades e propostas em cada lead.
+- Administracao de usuarios na pagina de configuracoes, conforme as permissoes da conta.
+
+## Estrutura
+
+```text
+src/
+  components/  Componentes reutilizaveis e modais
+  contexts/    Estado de autenticacao
+  pages/       Telas principais da aplicacao
+  schemas/     Validacoes de formularios
+  services/    Cliente HTTP e contratos da API
+```
+
+## Integracao com a API
+
+As chamadas ficam centralizadas em `src/services/`. O cliente adiciona automaticamente o cabecalho `Authorization: Bearer <token>` quando ha uma sessao ativa. Caso a API responda `401`, a sessao local e removida e a aplicacao retorna ao login.
