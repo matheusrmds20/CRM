@@ -1,7 +1,7 @@
 from app.models.users import Roles
 
 def can_manage(user, owner_id):
-    return user.role in (Roles.ADMIN, Roles.MANAGER) or user.id == owner_id
+    return user.role in (Roles.ADMIN) or user.id == owner_id
 
 
 

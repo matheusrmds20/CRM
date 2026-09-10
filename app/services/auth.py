@@ -13,8 +13,12 @@ class AuthService:
         self.user_repository = UserRepository(db)
 
 
-    def register_user(self, data: UserCreate):
+    def register_user(self, data: UserCreate, user):
         user_already_exists = self.user_repository.get_user_by_username(data.username)
+
+
+        if not can_manage_admin(user):
+            raise NoPermissionError("Voce nao tem permissao para executar essa acao")
 
         if user_already_exists:
             raise ItemAlreadyExistsError("Usuario ja existe")

@@ -162,3 +162,28 @@ npm run build
 - Troque a senha do administrador inicial assim que o primeiro acesso for realizado.
 - Use uma `SECRET_KEY` forte em ambientes fora do desenvolvimento.
 - O banco configurado pelo Docker e exposto apenas em `127.0.0.1`.
+
+## Pontos a melhorar
+
+- Adicionar um arquivo `.env.example` sem credenciais reais para tornar a configuracao inicial reproduzivel.
+- Centralizar e cobrir com testes de autorizacao as regras de permissao para cada perfil.
+- Padronizar o contrato dos servicos para colecoes vazias, definindo se devem retornar `[]` ou responder com erro de recurso nao encontrado.
+- Incluir verificacao automatica de lint e testes no fluxo de integracao continua.
+- Substituir o README padrao em `frontend/README.md` por uma documentacao especifica da interface.
+
+## Erros criticos conhecidos
+
+Estes itens devem ser corrigidos antes de disponibilizar a aplicacao em ambiente acessivel a usuarios reais.
+
+| Severidade | Problema | Impacto | Referencia |
+| --- | --- | --- | --- |
+| Critica | `POST /api/v1/auth/register` nao exige autenticacao e aceita o campo `role`, inclusive `admin`. | Qualquer pessoa com acesso a API pode criar uma conta administradora e assumir o controle do sistema. | `app/api/v1/auth.py`, `app/services/auth.py` |
+| Critica | A regra `can_manage` concede a `manager` permissao sobre qualquer usuario. Ela e usada na alteracao de senha e exclusao de usuarios. | Um gerente pode redefinir a senha ou excluir uma conta administradora, resultando em elevacao de privilegios ou indisponibilidade administrativa. | `app/utils/permissions.py`, `app/services/users.py` |
+| Critica | `SECRET_KEY` possui um valor padrao conhecido no codigo. | Caso a variavel nao seja definida, tokens JWT podem ser forjados por quem conhecer o valor padrao. | `app/core/config.py` |
+
+## Estado dos testes
+
+Na ultima validacao, `157` de `159` testes passaram. Existem duas falhas em `tests/service_tests/test_leads_service.py` por divergencia entre o comportamento testado e o codigo atual:
+
+- O teste espera `BadRequestError` para e-mail duplicado, enquanto o servico retorna `ItemAlreadyExistsError`.
+- O teste espera `ItemNotFoundError` ao listar leads vazios, enquanto o servico retorna uma lista vazia.

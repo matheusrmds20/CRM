@@ -28,32 +28,22 @@ class CompanyService:
     def get_company_by_id(self, company_id: int):
         company = self.repository.get_company_by_id(company_id)
 
-        if not company:
-            raise ItemNotFoundError("Nenhum company encontrado")
         
         return company
 
     def get_company_by_cnpj(self, cnpj: str):
         company = self.repository.get_company_by_cnpj(cnpj)
 
-        if not company:
-            raise ItemNotFoundError("Nenhum company encontrado")
-
         return company
 
     def get_company_by_name(self, name: str):
         company = self.repository.get_company_by_name(name)
-
-        if not company:
-            raise ItemNotFoundError("Nenhum company encontrado")
 
         return company
     
     def get_all_companies(self, user):
         companies = self.repository.get_all_companies()
 
-        if not companies:
-            raise ItemNotFoundError("Nenhum company encontrado")
 
         if not can_manage_admin(user):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")

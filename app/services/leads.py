@@ -26,8 +26,6 @@ class LeadsService:
         else:
             query = self.repository.get_all_leads(user.id)
 
-        if not query:
-            raise ItemNotFoundError("Nenhum lead encontrado")
 
         return paginate(query, page, page_size)
 
@@ -43,8 +41,6 @@ class LeadsService:
     def get_lead_by_id(self, lead_id: int, user):
         lead = self.repository.get_lead_by_id(lead_id)
 
-        if not lead:
-            raise ItemNotFoundError("Nenhum lead encontrado")
 
         if not can_manage(user, lead.user_id):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
@@ -54,8 +50,7 @@ class LeadsService:
     def get_lead_by_email(self, email: str, user):
         lead = self.repository.get_lead_by_email(email)
 
-        if not lead:
-            raise ItemNotFoundError("Nenhum lead encontrado")
+
 
         if not can_manage(user, lead.user_id):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
@@ -64,8 +59,6 @@ class LeadsService:
 
     def get_lead_by_name(self, name: str, user):
         lead = self.repository.get_lead_by_name(name)
-        if not lead:
-            raise ItemNotFoundError("Nenhum lead encontrado")
 
         if not can_manage(user, lead.user_id):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
@@ -74,8 +67,6 @@ class LeadsService:
 
     def get_leads_by_company_id(self, company_id: int, user):
         leads = self.repository.get_lead_by_company_id(company_id)
-        if not leads:
-            raise ItemNotFoundError("Nenhum lead encontrado")
 
         if not all(can_manage(user, lead.user_id) for lead in leads):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
@@ -93,8 +84,6 @@ class LeadsService:
 
         leads = self.repository.get_leads_by_status(status, target_user_id)
 
-        if not leads:
-            raise ItemNotFoundError("Nenhum lead encontrado")
 
         if not all(can_manage(user, lead.user_id) for lead in leads):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")

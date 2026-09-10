@@ -29,8 +29,7 @@ class ActivityService:
     def get_activity_by_id(self, user, activity_id: int):
 
         activity = self.repository.get_activity_by_id(activity_id)
-        if not activity:
-            raise ItemNotFoundError("Nenhum activity encontrado")
+
 
 
         if not can_manage(user, activity.user_id):
@@ -42,8 +41,7 @@ class ActivityService:
     def get_activity_by_lead_id(self, user, lead_id: int):
 
         activities = self.repository.get_activity_by_lead_id(lead_id)
-        if not activities:
-            raise ItemNotFoundError("Nenhum activity encontrado")
+
 
 
         if not all(can_manage(user, activity.user_id) for activity in activities):
@@ -55,8 +53,6 @@ class ActivityService:
     def get_my_activities(self, user):
         activities = self.repository.get_my_activities(user.id)
 
-        if not activities:
-            raise ItemNotFoundError("Nenhum activity encontrado")
 
         return activities
 
@@ -66,8 +62,6 @@ class ActivityService:
 
         activities = self.repository.get_activity_by_user_id(target_id)
         
-        if not activities:
-            raise ItemNotFoundError("Nenhum activity encontrado")
 
 
         if not can_manage(user, target_id):

@@ -1,5 +1,5 @@
 import pytest
-from app.api.exceps import BadRequestError, ItemNotFoundError, NoPermissionError
+from app.api.exceps import ItemNotFoundError, NoPermissionError, ItemAlreadyExistsError
 from app.models.leads import StatusLeads
 
 
@@ -13,7 +13,7 @@ def test_create_lead_success(leads_service, owner_context, lead_payload):
 
 
 def test_create_lead_raises_when_email_already_exists(leads_service, owner_context, lead_create_with_existing_email, lead):
-    with pytest.raises(BadRequestError, match="Lead ja existe"):
+    with pytest.raises(ItemAlreadyExistsError):
         leads_service.create_lead(owner_context, lead_create_with_existing_email)
 
 

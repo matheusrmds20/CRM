@@ -28,8 +28,7 @@ class ProposalService:
 
     def get_proposal_by_id(self, user, proposal_id: int):
         proposal = self.repository.get_proposal_by_id(proposal_id)
-        if not proposal:
-            raise ItemNotFoundError("Nenhum proposal encontrado")
+
 
         if not can_manage(user, proposal.user_id):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
@@ -38,8 +37,6 @@ class ProposalService:
 
     def get_proposal_by_lead_id(self, user, lead_id: int):
         proposals = self.repository.get_proposal_by_lead_id(lead_id)
-        if not proposals:
-            raise ItemNotFoundError("Nenhum proposal encontrado")
 
         if not all(can_manage(user, p.user_id) for p in proposals):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
@@ -54,8 +51,6 @@ class ProposalService:
         else:
             proposals = self.repository.get_all_proposals(user.id)
 
-        if not proposals:
-            raise ItemNotFoundError("Nenhum proposal encontrado")
 
         return proposals
 
@@ -66,8 +61,7 @@ class ProposalService:
         else:
             proposals = self.repository.get_all_proposals(user.id)
 
-        if not proposals:
-            raise ItemNotFoundError("Nenhum proposal encontrado")
+
 
 
         return proposals

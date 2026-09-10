@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     
 
-    SECRET_KEY: str = Field(default="change-me-to-a-very-long-secret-key", min_length=32)
+    SECRET_KEY: str = Field(default="6f6b01126b4312d73bdeceaf2fdf27b88ab2f72beb115fa3a3ce9b3e47701adc", min_length=32)
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 

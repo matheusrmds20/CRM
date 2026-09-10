@@ -27,16 +27,14 @@ class UserService:
     def get_me(self, user):
         user_repo = self.repository.get_me(user.id)
 
-        if not user_repo:
-            raise ItemNotFoundError("Nenhum user encontrado")
+
 
         return user_repo
 
     def get_user_by_id(self, user, user_id: int):
         user_repo = self.repository.get_user_by_id(user_id)
 
-        if not user_repo:
-            raise ItemNotFoundError("Nenhum user encontrado")
+
 
         if not can_manage(user, user_repo.id):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")

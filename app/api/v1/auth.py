@@ -26,9 +26,10 @@ def get_auth_service(db: Session = Depends(get_db)):
 def register_user(
     data: UserCreate, 
     service: AuthService = Depends(get_auth_service),
+    user: UserDB = Depends(get_current_user)
 ):
 
-    return service.register_user(data)
+    return service.register_user(data, user)
 
 
 @router_auth.post(
