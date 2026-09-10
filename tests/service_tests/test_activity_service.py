@@ -25,18 +25,6 @@ def test_create_activity_raises_no_permission_for_foreign_lead(activity_service,
         activity_service.create_activity(owner_context, payload)
 
 
-def test_get_activity_by_id_success(activity_service, owner_context, activity_payload):
-    activity = activity_service.create_activity(owner_context, activity_payload)
-    result = activity_service.get_activity_by_id(owner_context, activity.id)
-    assert result.id == activity.id
-    assert result.user_id == owner_context.id
-
-
-def test_get_activity_by_id_raises_item_not_found(activity_service, owner_context):
-    with pytest.raises(ItemNotFoundError, match="Nenhum activity encontrado"):
-        activity_service.get_activity_by_id(owner_context, 9999)
-
-
 def test_get_activity_by_lead_id_success(activity_service, owner_context, activity_payload):
     activity = activity_service.create_activity(owner_context, activity_payload)
     result = activity_service.get_activity_by_lead_id(owner_context, activity.lead_id)
@@ -45,19 +33,8 @@ def test_get_activity_by_lead_id_success(activity_service, owner_context, activi
     assert result[0].lead_id == activity.lead_id
 
 
-def test_get_activity_by_lead_id_raises_item_not_found(activity_service, owner_context):
-    with pytest.raises(ItemNotFoundError, match="Nenhum activity encontrado"):
-        activity_service.get_activity_by_lead_id(owner_context, 9999)
-
-
-def test_get_activity_by_user_id_success(activity_service, owner_context, owner_activities):
-    result = activity_service.get_activity_by_user_id(owner_context)
-    assert len(result) == 1
-
-
-def test_get_activity_by_user_id_raises_when_empty(activity_service, foreign_context):
-    with pytest.raises(ItemNotFoundError, match="Nenhum activity encontrado"):
-        activity_service.get_activity_by_user_id(foreign_context, foreign_context.id)
+def test_get_activity_by_lead_id_returns_empty_list_when_not_found(activity_service, owner_context):
+    assert activity_service.get_activity_by_lead_id(owner_context, 9999) == []
 
 
 def test_update_activity_success(activity_service, owner_context, activity_payload, activity_update_payload):

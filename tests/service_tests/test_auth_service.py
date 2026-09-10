@@ -14,7 +14,7 @@ Settings = get_settings()
 
 def test_register_user_success(db_session, auth_service, auth_payload, admin_user):
     """Deve registrar um novo usuário com sucesso."""
-    user = auth_service.register_user(auth_payload)
+    user = auth_service.register_user(auth_payload, admin_user)
 
     assert user.id is not None
     assert user.username == auth_payload.username.lower()
@@ -24,7 +24,7 @@ def test_register_user_success(db_session, auth_service, auth_payload, admin_use
 
 def test_register_user_username_lowercase(db_session, auth_service, auth_payload_uppercase, admin_user):
     """Deve converter username para minúsculo ao registrar."""
-    user = auth_service.register_user(auth_payload_uppercase)
+    user = auth_service.register_user(auth_payload_uppercase, admin_user)
 
     assert user.username == "testuser"
 
@@ -61,11 +61,11 @@ def test_authenticate_user_returns_token(db_session, auth_service, auth_payload)
 def test_register_user_already_exists(db_session, auth_service, auth_payload, admin_user):
     """Não deve permitir registrar usuário com username já existente."""
     # Registra o usuário uma vez
-    auth_service.register_user(auth_payload)
+    auth_service.register_user(auth_payload, admin_user)
 
     # Tenta registrar novamente com o mesmo username
     with pytest.raises(ItemAlreadyExistsError):
-        auth_service.register_user(auth_payload)
+        auth_service.register_user(auth_payload, admin_user)
 
 
 def test_authenticate_user_not_found(db_session, auth_service):

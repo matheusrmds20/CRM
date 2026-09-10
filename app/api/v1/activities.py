@@ -27,33 +27,6 @@ def create_activity(
 
 
 @router_activities.get(
-    "",
-    response_model=list[ActivityResponse],
-    summary="Lista minhas atividades",
-    description="Retorna todas as atividades do usuário autenticado.",
-)
-def get_my_activities(
-    service: ActivityService = Depends(get_activity_service),
-    current_user: UserDB = Depends(get_current_user),
-):
-
-    return service.get_my_activities(current_user)
-
-@router_activities.get(
-    "/id/{activity_id}",
-    response_model=ActivityResponse,
-    summary="Busca atividade por ID",
-    description="Retorna a atividade correspondente ao ID informado.",
-)
-def get_activity_by_id(
-    activity_id: int,
-    service: ActivityService = Depends(get_activity_service),
-    current_user: UserDB = Depends(get_current_user),
-):
-
-    return service.get_activity_by_id(current_user, activity_id)
-
-@router_activities.get(
     "/lead_id/{lead_id}",
     response_model=list[ActivityResponse],
     summary="Busca atividades por lead",
@@ -66,20 +39,6 @@ def get_activity_by_lead_id(
 ):
 
     return service.get_activity_by_lead_id(current_user, lead_id)        
-
-@router_activities.get(
-    "/user_id/{user_id}",
-    response_model=list[ActivityResponse],
-    summary="Busca atividades por usuário",
-    description="Retorna as atividades de um usuário específico.",
-)
-def get_activity_by_user_id(
-    user_id: int,
-    service: ActivityService = Depends(get_activity_service),
-    current_user: UserDB = Depends(get_current_user),
-):
-    
-    return service.get_activity_by_user_id(current_user, user_id)
 
 @router_activities.patch(
     "/update/{activity_id}",

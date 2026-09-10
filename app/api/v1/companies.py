@@ -39,48 +39,6 @@ def get_all_companies(
 
     return service.get_all_companies(current_user)
     
-@router_companies.get(
-    "/id/{company_id}",
-    response_model=CompanyResponse,
-    summary="Busca empresa por ID",
-    description="Retorna a empresa correspondente ao ID informado.",
-)
-def get_company_by_id(
-    company_id: int,
-    service: CompanyService = Depends(get_company_service),
-    current_user: UserDB = Depends(get_current_user),
-):
-
-    return service.get_company_by_id(company_id)
-
-@router_companies.get(
-    "/cnpj",
-    response_model=CompanyResponse,
-    summary="Busca empresa por CNPJ",
-    description="Retorna a empresa correspondente ao CNPJ informado.",
-)
-def get_company_by_cnpj(
-    cnpj: str,
-    service: CompanyService = Depends(get_company_service),
-    current_user: UserDB = Depends(get_current_user),
-):
-
-    return service.get_company_by_cnpj(cnpj)
-
-@router_companies.get(
-    "/name/{name}",
-    response_model=CompanyResponse,
-    summary="Busca empresa por nome",
-    description="Retorna a empresa correspondente ao nome informado.",
-)
-def get_company_by_name(
-    name: str,
-    service: CompanyService = Depends(get_company_service),
-    current_user: UserDB = Depends(get_current_user),
-):
-
-    return service.get_company_by_name(name)
-
 @router_companies.patch(
     "/update/{company_id}",
     response_model=CompanyResponse,

@@ -31,18 +31,6 @@ def test_create_proposal_raises_item_not_found_when_lead_missing(proposal_servic
         proposal_service.create_proposal(owner_context, payload)
 
 
-def test_get_proposal_by_id_success(proposal_service, owner_context, proposal_payload):
-    proposal = proposal_service.create_proposal(owner_context, proposal_payload)
-    result = proposal_service.get_proposal_by_id(owner_context, proposal.id)
-    assert result.id == proposal.id
-    assert result.user_id == owner_context.id
-
-
-def test_get_proposal_by_id_raises_item_not_found(proposal_service, owner_context):
-    with pytest.raises(ItemNotFoundError, match="Nenhum proposal encontrado"):
-        proposal_service.get_proposal_by_id(owner_context, 9999)
-
-
 def test_get_proposal_by_lead_id_success(proposal_service, owner_context, proposal_payload):
     proposal = proposal_service.create_proposal(owner_context, proposal_payload)
     result = proposal_service.get_proposal_by_lead_id(owner_context, proposal.lead_id)
@@ -51,36 +39,8 @@ def test_get_proposal_by_lead_id_success(proposal_service, owner_context, propos
     assert result[0].lead_id == proposal.lead_id
 
 
-def test_get_proposal_by_lead_id_raises_item_not_found(proposal_service, owner_context):
-    with pytest.raises(ItemNotFoundError, match="Nenhum proposal encontrado"):
-        proposal_service.get_proposal_by_lead_id(owner_context, 9999)
-
-
-def test_get_proposal_by_user_id_success(proposal_service, owner_context, owner_proposals):
-    result = proposal_service.get_proposal_by_user_id(owner_context)
-    assert len(result) == 1
-    assert all(proposal.user_id == owner_context.id for proposal in result)
-
-
-def test_get_proposal_by_user_id_raises_when_empty(proposal_service, foreign_context, empty_proposals_db):
-    with pytest.raises(ItemNotFoundError, match="Nenhum proposal encontrado"):
-        proposal_service.get_proposal_by_user_id(foreign_context)
-
-
-def test_get_all_proposals_success(proposal_service, owner_context, owner_proposals):
-    result = proposal_service.get_all_proposals(owner_context)
-    assert len(result) == 1
-    assert all(proposal.user_id == owner_context.id for proposal in result)
-
-
-def test_get_all_proposals_admin_can_access_owner_records(proposal_service, admin_context, owner_proposals):
-    result = proposal_service.get_all_proposals(admin_context)
-    assert len(result) == 1
-
-
-def test_get_all_proposals_raises_when_empty(proposal_service, foreign_context, empty_proposals_db):
-    with pytest.raises(ItemNotFoundError, match="Nenhum proposal encontrado"):
-        proposal_service.get_all_proposals(foreign_context)
+def test_get_proposal_by_lead_id_returns_empty_list_when_not_found(proposal_service, owner_context):
+    assert proposal_service.get_proposal_by_lead_id(owner_context, 9999) == []
 
 
 def test_update_proposal_success(proposal_service, owner_context, proposal_payload, proposal_update_payload):

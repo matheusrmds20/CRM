@@ -23,18 +23,6 @@ def test_create_activity_success(client, auth_headers_owner, http_activity_paylo
 
 
 
-def test_get_activity_by_id_success(client, auth_headers_owner, owner_activities):
-    activity_id = owner_activities.id
-    response = client.get(
-        f"{API_PREFIX}/activities/id/{activity_id}", 
-        headers=auth_headers_owner
-    )
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert data["id"] == activity_id
-
-
-
 def test_get_activity_by_lead_id_success(client, auth_headers_owner, owner_activities):
     lead_id = owner_activities.lead_id
     response = client.get(
@@ -45,18 +33,6 @@ def test_get_activity_by_lead_id_success(client, auth_headers_owner, owner_activ
     data = response.json()
     assert isinstance(data, list)
     assert all(a["lead_id"] == lead_id for a in data)
-
-
-def test_get_activity_by_user_id_success(client, auth_headers_owner, owner_activities):
-    user_id = owner_activities.user_id
-    response = client.get(
-        f"{API_PREFIX}/activities/user_id/{user_id}", 
-        headers=auth_headers_owner
-    )
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert isinstance(data, list)
-    assert all(a["user_id"] == user_id for a in data)
 
 
 def test_update_activity_success(client, auth_headers_owner, owner_activities, http_activity_update_payload):
@@ -101,14 +77,6 @@ def test_delete_activity_success(client, auth_headers_owner, owner_activities):
 
 
 
-    get_response = client.get(
-        f"{API_PREFIX}/activities/id/{activity_id}", 
-        headers=auth_headers_owner
-    )
-    assert get_response.status_code == status.HTTP_404_NOT_FOUND
-
-
-
 # Erros -------------------------------------------------------------------------------------------
 
 
@@ -133,15 +101,6 @@ def test_create_activity_foreign_lead(client, auth_headers_owner, foreign_lead):
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_get_activity_by_id_not_found(client, auth_headers_owner):
-    response = client.get(
-        f"{API_PREFIX}/activities/id/99999", 
-        headers=auth_headers_owner
-    )
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-
-
-    
 def test_update_activity_not_found(client, auth_headers_owner, http_activity_update_payload):
     response = client.patch(
         f"{API_PREFIX}/activities/update/99999", 

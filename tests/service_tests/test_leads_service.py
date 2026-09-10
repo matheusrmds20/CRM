@@ -23,9 +23,8 @@ def test_list_leads_success(leads_service, owner_context, owner_lead):
     assert result[0].id == owner_lead.id
 
 
-def test_list_leads_raises_when_empty(leads_service, owner_context, empty_leads_db):
-    with pytest.raises(ItemNotFoundError, match="Nenhum lead encontrado"):
-        leads_service.get_all_leads(owner_context)
+def test_list_leads_returns_empty_list_when_empty(leads_service, owner_context, empty_leads_db):
+    assert leads_service.get_all_leads(owner_context) == []
 
 
 def test_list_leads_sales_user_only_sees_own_records(leads_service, owner_context, owner_leads, foreign_leads):
@@ -43,64 +42,6 @@ def test_list_leads_admin_can_access(leads_service, admin_context, owner_leads, 
 def test_list_leads_manager_can_access(leads_service, manager_context, owner_leads, foreign_leads):
     result = leads_service.get_all_leads(manager_context)
     assert len(result) == 2
-
-
-def test_list_lead_by_id_success(leads_service, owner_context, owner_lead):
-    result = leads_service.get_lead_by_id(owner_lead.id, owner_context)
-
-    assert result.id == owner_lead.id
-    assert result.email == owner_lead.email
-
-
-def test_list_lead_by_id_raises_when_not_found(leads_service, owner_context):
-    with pytest.raises(ItemNotFoundError, match="Nenhum lead encontrado"):
-        leads_service.get_lead_by_id(9999, owner_context)
-
-
-def test_list_lead_by_id_raises_unauthorized(leads_service, foreign_context, owner_lead):
-    with pytest.raises(NoPermissionError):
-        leads_service.get_lead_by_id(owner_lead.id, foreign_context)
-
-
-def test_list_lead_by_email_success(leads_service, owner_context, owner_lead):
-    result = leads_service.get_lead_by_email(owner_lead.email, owner_context)
-    assert result.id == owner_lead.id
-
-
-def test_list_lead_by_email_raises_when_not_found(leads_service, owner_context):
-    with pytest.raises(ItemNotFoundError, match="Nenhum lead encontrado"):
-        leads_service.get_lead_by_email("missing@example.com", owner_context)
-
-
-def test_list_lead_by_name_success(leads_service, owner_context, owner_lead):
-    result = leads_service.get_lead_by_name(owner_lead.name, owner_context)
-    assert result.id == owner_lead.id
-
-
-def test_list_lead_by_name_raises_when_not_found(leads_service, owner_context):
-    with pytest.raises(ItemNotFoundError, match="Nenhum lead encontrado"):
-        leads_service.get_lead_by_name("Missing", owner_context)
-
-
-def test_list_leads_by_company_id_success(leads_service, owner_context, owner_lead):
-    result = leads_service.get_leads_by_company_id(owner_lead.company_id, owner_context)
-    assert len(result) > 0
-    assert result[0].id == owner_lead.id
-
-
-def test_list_leads_by_company_id_raises_when_not_found(leads_service, owner_context):
-    with pytest.raises(ItemNotFoundError, match="Nenhum lead encontrado"):
-        leads_service.get_leads_by_company_id(9999, owner_context)
-
-
-def test_list_leads_by_status_success(leads_service, admin_context, owner_leads, foreign_leads):
-    result = leads_service.get_leads_by_status("new", admin_context)
-    assert len(result) == 2
-
-
-def test_list_leads_by_status_raises_when_not_found(leads_service, owner_context):
-    with pytest.raises(ItemNotFoundError, match="Nenhum lead encontrado"):
-        leads_service.get_leads_by_status(StatusLeads.WON, owner_context)
 
 
 def test_update_lead_success(leads_service, owner_context, owner_lead, lead_update_payload):

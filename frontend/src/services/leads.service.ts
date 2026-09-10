@@ -41,39 +41,9 @@ export interface LeadUpdatePayload {
   is_active?: boolean;
 }
 
-export interface PaginationResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  page_size: number;
-  pages: number;
-}
-
 export const leadsService = {
   async getAll(): Promise<LeadApiResponse[]> {
     const response = await api.get<LeadApiResponse[]>('/leads');
-    return response.data;
-  },
-
-  async getPaginated(page: number = 1, pageSize: number = 10): Promise<PaginationResponse<LeadApiResponse>> {
-    const response = await api.get<PaginationResponse<LeadApiResponse>>('/leads/list/query', {
-      params: { page, page_size: pageSize },
-    });
-    return response.data;
-  },
-
-  async getById(id: number): Promise<LeadApiResponse> {
-    const response = await api.get<LeadApiResponse>(`/leads/list/id/${id}`);
-    return response.data;
-  },
-
-  async getByStatus(status: LeadStatusApi): Promise<LeadApiResponse[]> {
-    const response = await api.get<LeadApiResponse[]>(`/leads/list/status/${status}`);
-    return response.data;
-  },
-
-  async getByCompanyId(companyId: number): Promise<LeadApiResponse[]> {
-    const response = await api.get<LeadApiResponse[]>(`/leads/list/company/${companyId}`);
     return response.data;
   },
 

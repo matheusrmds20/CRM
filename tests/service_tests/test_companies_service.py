@@ -30,42 +30,6 @@ def test_create_company_raises_when_cnpj_already_exists(company_service, admin_c
 
 # Get
 
-def test_get_company_by_id_success(company_service, company):
-    result = company_service.get_company_by_id(company.id)
-
-    assert result.id == company.id
-    assert result.name == company.name
-
-
-def test_get_company_by_id_raises_when_not_found(company_service):
-    with pytest.raises(ItemNotFoundError, match="Nenhum company encontrado"):
-        company_service.get_company_by_id(9999)
-
-
-def test_get_company_by_cnpj_success(company_service, company):
-    result = company_service.get_company_by_cnpj(company.cnpj)
-
-    assert result.id == company.id
-    assert result.cnpj == company.cnpj
-
-
-def test_get_company_by_cnpj_raises_when_not_found(company_service):
-    with pytest.raises(ItemNotFoundError, match="Nenhum company encontrado"):
-        company_service.get_company_by_cnpj("00.000.000/0000-00")
-
-
-def test_get_company_by_name_success(company_service, admin_context, company):
-    result = company_service.get_company_by_name(company.name)
-
-    assert result.id == company.id
-    assert result.name == company.name
-
-
-def test_get_company_by_name_raises_when_not_found(company_service, admin_context):
-    with pytest.raises(ItemNotFoundError, match="Nenhum company encontrado"):
-        company_service.get_company_by_name("missing company")
-
-
 # List
 
 def test_get_all_companies_success(company_service, admin_context, all_companies):
@@ -75,9 +39,8 @@ def test_get_all_companies_success(company_service, admin_context, all_companies
     assert [item.id for item in result] == [company.id for company in all_companies]
 
 
-def test_get_all_companies_raises_when_empty(company_service, admin_context, empty_companies_db):
-    with pytest.raises(ItemNotFoundError, match="Nenhum company encontrado"):
-        company_service.get_all_companies(admin_context)
+def test_get_all_companies_returns_empty_list_when_empty(company_service, admin_context, empty_companies_db):
+    assert company_service.get_all_companies(admin_context) == []
 
 
 def test_get_all_companies_raises_unauthorized_for_sales_user(company_service, sales_context, all_companies):

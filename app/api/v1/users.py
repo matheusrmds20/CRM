@@ -12,20 +12,6 @@ def get_user_service(db: Session = Depends(get_db)):
     return UserService(db)
 
 
-@router_user.post(
-    "/create",
-    response_model=UserResponse,
-    summary="Cria um novo usuário",
-    description="Cria um usuário associado ao usuário autenticado.",
-)
-def create_user(
-    data: UserResponse,
-    service: UserService = Depends(get_user_service),
-    current_user: UserDB = Depends(get_current_user),
-):
-    return service.create_user(current_user, data)
-
-
 @router_user.get(
     "/me",
     response_model=UserResponse,
@@ -64,21 +50,6 @@ def get_user_by_id(
 ):
     
     return service.get_user_by_id(current_user, user_id)
-
-@router_user.get(
-    "/list/by_username/{username}",
-    response_model=UserResponse,
-    summary="Busca usuário por nome de usuário",
-    description="Retorna o usuário correspondente ao nome de usuário informado.",
-)
-def get_user_by_username(
-    username: str,
-    service: UserService = Depends(get_user_service),
-    current_user: UserDB = Depends(get_current_user),
-):
-    
-    return service.get_user_by_username(current_user, username)
-
 
 @router_user.patch(
     "/update_username/{target_user_id}",

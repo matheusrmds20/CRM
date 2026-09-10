@@ -25,16 +25,6 @@ export const companiesService = {
     return response.data;
   },
 
-  async getById(id: number): Promise<CompanyApiResponse> {
-    const response = await api.get<CompanyApiResponse>(`/companies/id/${id}`);
-    return response.data;
-  },
-
-  async getByCnpj(cnpj: string): Promise<CompanyApiResponse> {
-    const response = await api.get<CompanyApiResponse>(`/companies/cnpj?cnpj=${cnpj}`);
-    return response.data;
-  },
-
   async create(payload: CompanyCreatePayload): Promise<CompanyApiResponse> {
     const response = await api.post<CompanyApiResponse>('/companies/create', payload);
     return response.data;

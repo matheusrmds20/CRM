@@ -26,33 +26,6 @@ def create_proposal(
     return service.create_proposal(current_user, data)
 
 @router_proposals.get(
-    "",
-    response_model=list[ProposalResponse],
-    summary="Lista todas as propostas",
-    description="Retorna todas as propostas do usuário autenticado.",
-)
-def get_all_proposals(
-    service: ProposalService = Depends(get_proposals_service),
-    current_user: UserDB = Depends(get_current_user),
-):
-
-    return service.get_all_proposals(current_user)
-    
-@router_proposals.get(
-    "/id/{proposal_id}",
-    response_model=ProposalResponse,
-    summary="Busca proposta por ID",
-    description="Retorna a proposta correspondente ao ID informado.",
-)
-def get_proposal_by_id(
-    proposal_id: int,
-    service: ProposalService = Depends(get_proposals_service),
-    current_user: UserDB = Depends(get_current_user),
-):
-    
-    return service.get_proposal_by_id(current_user, proposal_id)
-
-@router_proposals.get(
     "/lead_id/{lead_id}",
     response_model=list[ProposalResponse],
     summary="Lista propostas por lead",
@@ -65,20 +38,6 @@ def get_proposal_by_lead_id(
 ):
 
     return service.get_proposal_by_lead_id(current_user, lead_id)        
-
-@router_proposals.get(
-    "/user_id/{user_id}",
-    response_model=list[ProposalResponse],
-    summary="Lista propostas por usuário",
-    description="Retorna as propostas de um usuário específico.",
-)
-def get_proposal_by_user_id(
-    user_id: int,
-    service: ProposalService = Depends(get_proposals_service),
-    current_user: UserDB = Depends(get_current_user),
-):
-
-    return service.get_proposal_by_user_id(current_user, user_id)
 
 @router_proposals.patch(
     "/update/{proposal_id}",

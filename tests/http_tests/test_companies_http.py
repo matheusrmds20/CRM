@@ -44,54 +44,10 @@ def test_get_all_companies_success(client, auth_headers, company):
 
 
 def test_get_all_companies_empty(client, auth_headers, empty_companies_db):
-    """GET /companies quando não há empresas deve retornar lista vazia ou erro."""
+    """GET /companies sem empresas deve retornar uma lista vazia."""
     response = client.get(f"{API_PREFIX}/companies", headers=auth_headers)
-    # O service lança ValueError se vazio, então provavelmente 404 ou 400
-    assert response.status_code in (status.HTTP_404_NOT_FOUND, status.HTTP_400_BAD_REQUEST)
-
-
-def test_get_company_by_id_success(client, auth_headers, company):
-    """GET /companies/id/{company_id} retorna a empresa correta."""
-    response = client.get(f"{API_PREFIX}/companies/id/{company.id}", headers=auth_headers)
     assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert data["id"] == company.id
-    assert data["name"] == company.name
-
-
-def test_get_company_by_id_not_found(client, auth_headers):
-    """GET /companies/id/{id} com ID inexistente retorna 404."""
-    response = client.get(f"{API_PREFIX}/companies/id/99999", headers=auth_headers)
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-
-
-def test_get_company_by_cnpj_success(client, auth_headers, company):
-    """GET /companies/cnpj/{cnpj} retorna a empresa."""
-
-    response = client.get(f"{API_PREFIX}/companies/cnpj", params={"cnpj": company.cnpj}, headers=auth_headers)
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert data["cnpj"] == company.cnpj
-
-
-def test_get_company_by_cnpj_not_found(client, auth_headers):
-    """GET /companies/cnpj com CNPJ inexistente retorna 404."""
-    response = client.get(f"{API_PREFIX}/companies/cnpj", params={"cnpj": "00.000.000/0000-00"}, headers=auth_headers)
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-
-
-def test_get_company_by_name_success(client, auth_headers, company):
-    """GET /companies/name/{name} retorna a empresa."""
-    response = client.get(f"{API_PREFIX}/companies/name/{company.name}", headers=auth_headers)
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert data["name"] == company.name
-
-
-def test_get_company_by_name_not_found(client, auth_headers):
-    """GET /companies/name/{name} com nome inexistente retorna 404."""
-    response = client.get(f"{API_PREFIX}/companies/name/inexistente", headers=auth_headers)
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == []
 
 
 def test_update_company_success(client, auth_headers, company, http_company_update_payload):
@@ -119,11 +75,6 @@ def test_delete_company_success(client, auth_headers, company):
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["id"] == company.id
-
-    # Verifica que foi removida
-    get_response = client.get(f"{API_PREFIX}/companies/id/{company.id}", headers=auth_headers)
-    assert get_response.status_code == status.HTTP_404_NOT_FOUND
-
 
 def test_delete_company_not_found(client, auth_headers):
     """DELETE /companies/{id} com ID inexistente retorna 404."""
