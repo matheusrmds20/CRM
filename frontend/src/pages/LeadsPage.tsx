@@ -248,6 +248,9 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
         onSaved={(updated) => {
           setLeads((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
         }}
+        onDeleted={(id) => {
+          setLeads((prev) => prev.filter((lead) => lead.id !== id));
+        }}
       />
 
       <LeadCreateModal

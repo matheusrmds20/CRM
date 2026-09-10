@@ -152,6 +152,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         onSaved={(updated) => {
           setLeads((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
         }}
+        onDeleted={(id) => {
+          setLeads((prev) => prev.filter((lead) => lead.id !== id));
+        }}
       />
     </div>
   );

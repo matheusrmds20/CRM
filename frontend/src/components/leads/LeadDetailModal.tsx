@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { X, Phone, Calendar, Mail, MessageCircle, ChevronUp, ChevronDown, User, IndianRupee } from 'lucide-react';
+import { X, Phone, Calendar, Mail, MessageCircle, ChevronUp, ChevronDown, User, IndianRupee, Plus, FileText, Clock, Send, Pencil, Trash2 } from 'lucide-react';
 import { type LeadItem, type LeadStatus } from '../../schemas/lead.schema';
 import {
   activitiesService,
   type ActivityApiResponse,
   type ActivityTypeApi,
 } from '../../services/activities.service';
-import { proposalsService, type ProposalApiResponse } from '../../services/proposals.service';
+import { proposalsService, type ProposalApiResponse, type ProposalStatusApi } from '../../services/proposals.service';
 import { leadsService, type LeadUpdatePayload } from '../../services/leads.service';
 
 interface LeadDetailModalProps {
@@ -14,6 +14,7 @@ interface LeadDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaved?: (updated: LeadItem) => void;
+  onDeleted?: (id: string) => void;
 }
 
 const activityLabels: Record<ActivityTypeApi, string> = {
@@ -101,6 +102,7 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
   isOpen,
   onClose,
   onSaved,
+  onDeleted,
 }) => {
   const [activities, setActivities] = useState<ActivityApiResponse[]>([]);
   const [proposals, setProposals] = useState<ProposalApiResponse[]>([]);
@@ -109,6 +111,17 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
   const [activeTab, setActiveTab] = useState<ActivityTypeApi>('call');
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [sideForm, setSideForm] = useState<'activity' | 'proposal' | null>(null);
+  const [activityType, setActivityType] = useState<ActivityTypeApi>('call');
+  const [activityDescription, setActivityDescription] = useState('');
+  const [activityDoneAt, setActivityDoneAt] = useState('');
+  const [proposalStatus, setProposalStatus] = useState<ProposalStatusApi>('pending');
+  const [proposalValue, setProposalValue] = useState('');
+  const [proposalSentAt, setProposalSentAt] = useState('');
+  const [isSavingSideForm, setIsSavingSideForm] = useState(false);
+  const [editingActivityId, setEditingActivityId] = useState<number | null>(null);
+  const [editingProposalId, setEditingProposalId] = useState<number | null>(null);
+  const [isDeletingLead, setIsDeletingLead] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const closeTimeoutRef = useRef<number | null>(null);
   const onCloseRef = useRef(onClose);
@@ -169,6 +182,15 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
     setActiveTab('call');
     setIsActivityOpen(true);
     setIsProposalOpen(true);
+    setSideForm(null);
+    setActivityType('call');
+    setActivityDescription('');
+    setActivityDoneAt('');
+    setProposalStatus('pending');
+    setProposalValue('');
+    setProposalSentAt('');
+    setEditingActivityId(null);
+    setEditingProposalId(null);
 
     const loadData = async () => {
       if (leadId === null) return;
@@ -235,6 +257,102 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
     }
   };
 
+  const toIsoDate = (value: string) => (value ? new Date(value).toISOString() : null);
+  const toLocalDateTime = (value: string | null) => (value ? new Date(value).toISOString().slice(0, 16) : '');
+
+  const handleCreateActivity = async () => {
+    if (leadId === null || activityDescription.trim().length < 3) return;
+    setIsSavingSideForm(true);
+    try {
+      const payload = { activity_type: activityType, description: activityDescription.trim(), done_at: toIsoDate(activityDoneAt) };
+      if (editingActivityId !== null) {
+        const updated = await activitiesService.update(editingActivityId, payload);
+        setActivities((current) => current.map((item) => item.id === updated.id ? updated : item));
+      } else {
+        const created = await activitiesService.create({ lead_id: leadId, ...payload });
+        setActivities((current) => [created, ...current]);
+      }
+      setActivityDescription('');
+      setActivityDoneAt('');
+      setEditingActivityId(null);
+      setSideForm(null);
+    } catch (err) {
+      console.error('Erro ao criar atividade:', err);
+    } finally {
+      setIsSavingSideForm(false);
+    }
+  };
+
+  const handleCreateProposal = async () => {
+    const value = Number(proposalValue);
+    if (leadId === null || !proposalValue || Number.isNaN(value) || value < 0) return;
+    setIsSavingSideForm(true);
+    try {
+      const payload = { status: proposalStatus, value, sent_at: toIsoDate(proposalSentAt) };
+      if (editingProposalId !== null) {
+        const updated = await proposalsService.update(editingProposalId, payload);
+        setProposals((current) => current.map((item) => item.id === updated.id ? updated : item));
+      } else {
+        const created = await proposalsService.create({ lead_id: leadId, ...payload });
+        setProposals((current) => [created, ...current]);
+      }
+      setProposalValue('');
+      setProposalSentAt('');
+      setEditingProposalId(null);
+      setSideForm(null);
+    } catch (err) {
+      console.error('Erro ao criar proposta:', err);
+    } finally {
+      setIsSavingSideForm(false);
+    }
+  };
+
+  const openActivityEdit = (activity: ActivityApiResponse) => {
+    setEditingProposalId(null);
+    setEditingActivityId(activity.id);
+    setActivityType(activity.activity_type);
+    setActivityDescription(activity.description);
+    setActivityDoneAt(toLocalDateTime(activity.done_at));
+    setSideForm('activity');
+  };
+
+  const openProposalEdit = (proposal: ProposalApiResponse) => {
+    setEditingActivityId(null);
+    setEditingProposalId(proposal.id);
+    setProposalStatus(proposal.status);
+    setProposalValue(String(proposal.value));
+    setProposalSentAt(toLocalDateTime(proposal.sent_at));
+    setSideForm('proposal');
+  };
+
+  const handleDeleteActivity = async (id: number) => {
+    if (!window.confirm('Excluir esta atividade?')) return;
+    try {
+      await activitiesService.delete(id);
+      setActivities((current) => current.filter((activity) => activity.id !== id));
+    } catch (err) { console.error('Erro ao excluir atividade:', err); }
+  };
+
+  const handleDeleteProposal = async (id: number) => {
+    if (!window.confirm('Excluir esta proposta?')) return;
+    try {
+      await proposalsService.delete(id);
+      setProposals((current) => current.filter((proposal) => proposal.id !== id));
+    } catch (err) { console.error('Erro ao excluir proposta:', err); }
+  };
+
+  const handleDeleteLead = async () => {
+    if (leadId === null || !lead) return;
+    if (!window.confirm(`Excluir o lead ${lead.name}? Esta ação não pode ser desfeita.`)) return;
+    setIsDeletingLead(true);
+    try {
+      await leadsService.delete(leadId);
+      onDeleted?.(lead.id);
+      closeModal();
+    } catch (err) { console.error('Erro ao excluir lead:', err); }
+    finally { setIsDeletingLead(false); }
+  };
+
   // A aba padrão "Call" mostra todas as atividades; as demais filtram por tipo.
   const displayActivities =
     activeTab === 'call' ? activities : activities.filter((a) => a.activity_type === activeTab);
@@ -262,12 +380,12 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
               </h3>
             </div>
           </div>
-          <button
-            onClick={closeModal}
-            className="p-2 text-[#7D7068] hover:text-[#3B2317] hover:bg-white hover:shadow-sm rounded-full transition-all cursor-pointer"
-          >
-            <X className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={handleDeleteLead} disabled={isDeletingLead} className="flex items-center gap-2 rounded-xl border border-[#87533C] px-4 py-2 text-sm font-semibold text-[#683720] transition-colors hover:bg-[#FFF8F3] disabled:opacity-50 cursor-pointer">
+              <Trash2 className="w-4 h-4" /> {isDeletingLead ? 'Excluindo...' : 'Excluir lead'}
+            </button>
+            <button onClick={closeModal} className="p-2 text-[#7D7068] hover:text-[#3B2317] hover:bg-white hover:shadow-sm rounded-full transition-all cursor-pointer"><X className="w-6 h-6" /></button>
+          </div>
         </div>
 
         {/* Corpo do Modal */}
@@ -405,6 +523,48 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
 
           {/* Coluna Direita - Activity History */}
           <div className="w-full md:w-80 shrink-0 space-y-5">
+            {/* Ações laterais */}
+            <div className="bg-[#EDE1CA] border border-[#D8C6A9] rounded-3xl p-3 shadow-[0_12px_25px_-16px_rgba(59,35,23,0.7)]">
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => { setEditingActivityId(null); setActivityDescription(''); setActivityDoneAt(''); setSideForm(sideForm === 'activity' ? null : 'activity'); }} className={`flex flex-col items-center gap-1.5 rounded-2xl px-3 py-3 text-sm font-semibold transition-all cursor-pointer ${sideForm === 'activity' ? 'bg-[#BA5827] text-white shadow-md' : 'bg-[#FFFDF9] text-[#5A4B42] hover:bg-white'}`}>
+                  <Plus className="w-5 h-5" /> Nova atividade
+                </button>
+                <button onClick={() => { setEditingProposalId(null); setProposalValue(''); setProposalSentAt(''); setSideForm(sideForm === 'proposal' ? null : 'proposal'); }} className={`flex flex-col items-center gap-1.5 rounded-2xl px-3 py-3 text-sm font-semibold transition-all cursor-pointer ${sideForm === 'proposal' ? 'bg-[#7A937D] text-white shadow-md' : 'bg-[#FFFDF9] text-[#5A4B42] hover:bg-white'}`}>
+                  <FileText className="w-5 h-5" /> Nova proposta
+                </button>
+              </div>
+
+              {sideForm === 'activity' && (
+                <div className="mt-3 rounded-2xl bg-[#FFFDF9] p-4 space-y-3 animate-modal-enter">
+                  <h4 className="text-base font-bold text-[#3B2317]">{editingActivityId ? 'Editar atividade' : 'Nova atividade'}</h4>
+                  <select value={activityType} onChange={(e) => setActivityType(e.target.value as ActivityTypeApi)} className="w-full rounded-xl border border-[#CFC1AE] bg-white px-3 py-2.5 text-sm text-[#3B2317] focus:outline-none focus:ring-2 focus:ring-[#7A937D]/30">
+                    {Object.entries(activityLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                  </select>
+                  <textarea value={activityDescription} onChange={(e) => setActivityDescription(e.target.value)} rows={3} placeholder="Descrição da atividade" className="w-full resize-none rounded-xl border border-[#CFC1AE] bg-white px-3 py-2.5 text-sm text-[#3B2317] placeholder-[#A89C90] focus:outline-none focus:ring-2 focus:ring-[#7A937D]/30" />
+                  <label className="block text-xs font-semibold text-[#685A52]">Realizada em
+                    <span className="relative mt-1 block"><Clock className="absolute left-3 top-1/2 w-4 h-4 -translate-y-1/2 text-[#8C827A]" /><input type="datetime-local" value={activityDoneAt} onChange={(e) => setActivityDoneAt(e.target.value)} className="w-full rounded-xl border border-[#CFC1AE] bg-white py-2.5 pl-9 pr-2 text-sm text-[#3B2317] focus:outline-none" /></span>
+                  </label>
+                  <button onClick={handleCreateActivity} disabled={isSavingSideForm || activityDescription.trim().length < 3} className="w-full rounded-xl bg-[#BA5827] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#A94C20] disabled:cursor-not-allowed disabled:opacity-50">{isSavingSideForm ? 'Salvando...' : editingActivityId ? 'Atualizar atividade' : 'Salvar atividade'}</button>
+                </div>
+              )}
+
+              {sideForm === 'proposal' && (
+                <div className="mt-3 rounded-2xl bg-[#FFFDF9] p-4 space-y-3 animate-modal-enter">
+                  <h4 className="text-base font-bold text-[#3B2317]">{editingProposalId ? 'Editar proposta' : 'Nova proposta'}</h4>
+                  <label className="block text-xs font-semibold text-[#685A52]">Valor
+                    <input type="number" min="0" step="0.01" value={proposalValue} onChange={(e) => setProposalValue(e.target.value)} placeholder="0,00" className="mt-1 w-full rounded-xl border border-[#CFC1AE] bg-white px-3 py-2.5 text-sm text-[#3B2317] focus:outline-none focus:ring-2 focus:ring-[#7A937D]/30" />
+                  </label>
+                  <label className="block text-xs font-semibold text-[#685A52]">Status
+                    <select value={proposalStatus} onChange={(e) => setProposalStatus(e.target.value as ProposalStatusApi)} className="mt-1 w-full rounded-xl border border-[#CFC1AE] bg-white px-3 py-2.5 text-sm text-[#3B2317] focus:outline-none focus:ring-2 focus:ring-[#7A937D]/30"><option value="pending">Pendente</option><option value="accepted">Aceita</option><option value="rejected">Recusada</option></select>
+                  </label>
+                  <label className="block text-xs font-semibold text-[#685A52]">Enviada em
+                    <span className="relative mt-1 block"><Send className="absolute left-3 top-1/2 w-4 h-4 -translate-y-1/2 text-[#8C827A]" /><input type="datetime-local" value={proposalSentAt} onChange={(e) => setProposalSentAt(e.target.value)} className="w-full rounded-xl border border-[#CFC1AE] bg-white py-2.5 pl-9 pr-2 text-sm text-[#3B2317] focus:outline-none" /></span>
+                  </label>
+                  <button onClick={handleCreateProposal} disabled={isSavingSideForm || !proposalValue} className="w-full rounded-xl bg-[#7A937D] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#66806A] disabled:cursor-not-allowed disabled:opacity-50">{isSavingSideForm ? 'Salvando...' : editingProposalId ? 'Atualizar proposta' : 'Salvar proposta'}</button>
+                </div>
+              )}
+            </div>
+
             {/* Activity History */}
             <div className="bg-white rounded-3xl border border-[#E8E0D4] shadow-sm overflow-hidden">
               <button
@@ -466,12 +626,16 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                           <div className="w-11 text-[11px] font-bold text-[#8C827A] pt-0.5 shrink-0 text-center leading-tight">
                             {formatDay(act.done_at || act.created_at)}
                           </div>
-                          <div className="text-sm text-[#3B2317] leading-relaxed">
+                          <div className="min-w-0 flex-1 text-sm text-[#3B2317] leading-relaxed">
                             <span className="font-semibold text-[#BA5827]">
                               {activityLabels[act.activity_type] || 'Outro'}
                             </span>
                             <span className="text-[#8C827A]"> - </span>
                             {act.description}
+                          </div>
+                          <div className="flex gap-1 text-[#835033]">
+                            <button onClick={() => openActivityEdit(act)} aria-label="Editar atividade" className="rounded-lg p-1.5 hover:bg-white cursor-pointer"><Pencil className="w-4 h-4" /></button>
+                            <button onClick={() => handleDeleteActivity(act.id)} aria-label="Excluir atividade" className="rounded-lg p-1.5 hover:bg-white text-[#A64F2A] cursor-pointer"><Trash2 className="w-4 h-4" /></button>
                           </div>
                         </div>
                       ))
@@ -527,9 +691,11 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                             {proposalStatusLabels[prop.status] || prop.status}
                           </span>
                         </div>
-                        <span className="text-sm font-bold text-[#B75828]">
-                          {formatCurrency(prop.value)}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm font-bold text-[#B75828]">{formatCurrency(prop.value)}</span>
+                          <button onClick={() => openProposalEdit(prop)} aria-label="Editar proposta" className="rounded-lg p-1.5 text-[#835033] hover:bg-white cursor-pointer"><Pencil className="w-4 h-4" /></button>
+                          <button onClick={() => handleDeleteProposal(prop.id)} aria-label="Excluir proposta" className="rounded-lg p-1.5 text-[#A64F2A] hover:bg-white cursor-pointer"><Trash2 className="w-4 h-4" /></button>
+                        </div>
                       </div>
                     ))
                   )}
