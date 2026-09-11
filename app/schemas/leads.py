@@ -8,7 +8,7 @@ from datetime import datetime
 class LeadBase(BaseModel):
     name: str = Field(min_length=3, max_length=100)
     email: EmailStr
-    phone: str | None = Field(min_length=9, max_length=20)
+    phone: str | None = Field(min_length=9, max_length=11)
     company_id: int | None 
     subject: str = Field(min_length=3, max_length=100)
     description: str | None = Field(min_length=3, max_length=500)
@@ -25,7 +25,7 @@ class LeadCreate(LeadBase):
     pass
 
 class LeadUpdate(BaseModel):
-    name: str | None = Field(default=None, min_length=3, max_length=20)
+    name: str | None = Field(default=None, min_length=3, max_length=100)
     email: EmailStr | None = None
     phone: str | None = Field(default=None, min_length=9, max_length=11)
     company_id: int | None = None

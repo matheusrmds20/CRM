@@ -1,55 +1,27 @@
 from app.repositories.users import UserRepository
-from app.schemas.users import UserUpdate, UserUpdateUsername, UserUpdatePassword, UserCreate
+from app.schemas.users import UserUpdate, UserUpdateUsername, UserUpdatePassword
 from sqlalchemy.orm import Session
 from app.api.exceps import BadRequestError, NoPermissionError, ItemNotFoundError
 from app.core.security import verify_password, hash_password
-from app.utils.permissions import can_manage
-from app.utils.permissions import can_manage_admin
+from app.utils.permissions import can_manage, can_manage_admin
+
 
 
 class UserService:
     def __init__(self, db: Session):
         self.repository = UserRepository(db)
 
-    def create_user(self, user, data: UserCreate):
-        user_repo = self.repository.get_user_by_username(data.username)
-
-        if user_repo:
-            raise BadRequestError("Usuário ja existente")
-
-        if not can_manage_admin(user):
-            raise NoPermissionError("Voce nao tem permissao para executar essa acao")
-
-        data.password = hash_password(data.password)
-
-        return self.repository.create_user(data)
-
     def get_me(self, user):
         user_repo = self.repository.get_me(user.id)
-
-
 
         return user_repo
 
     def get_user_by_id(self, user, user_id: int):
         user_repo = self.repository.get_user_by_id(user_id)
 
-
-
         if not can_manage(user, user_repo.id):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
         
-        return user_repo
-
-    def get_user_by_username(self, user, username: str):
-        user_repo = self.repository.get_user_by_username(username)
-
-        if not user_repo:
-            raise ItemNotFoundError("Nenhum user encontrado")
-
-        if not can_manage(user, user_repo.id):
-            raise NoPermissionError("Voce nao tem permissao para executar essa acao")
-
         return user_repo
 
     def get_all_users(self, user):

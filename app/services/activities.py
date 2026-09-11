@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.api.exceps import ItemAlreadyExistsError, ItemNotFoundError, NoPermissionError
+from app.api.exceps import ItemNotFoundError, NoPermissionError
 from app.repositories.activities import ActivityRepository
 from app.repositories.leads import LeadsRepository
 from app.schemas.activities import ActivityCreate, ActivityUpdate
@@ -26,18 +26,6 @@ class ActivityService:
         return self.repository.create_activity(user.id, data)
 
 
-    def get_activity_by_id(self, user, activity_id: int):
-
-        activity = self.repository.get_activity_by_id(activity_id)
-
-
-
-        if not can_manage(user, activity.user_id):
-            raise NoPermissionError("Voce nao tem permissao para executar essa acao")
-
-
-        return activity
-
     def get_activity_by_lead_id(self, user, lead_id: int):
 
         activities = self.repository.get_activity_by_lead_id(lead_id)
@@ -47,25 +35,6 @@ class ActivityService:
         if not all(can_manage(user, activity.user_id) for activity in activities):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
 
-
-        return activities
-
-    def get_my_activities(self, user):
-        activities = self.repository.get_my_activities(user.id)
-
-
-        return activities
-
-    def get_activity_by_user_id(self, user, user_id: int = None ):
-        target_id = user.id if user_id is None else user_id
-
-
-        activities = self.repository.get_activity_by_user_id(target_id)
-        
-
-
-        if not can_manage(user, target_id):
-            raise NoPermissionError("Voce nao tem permissao para executar essa acao")
 
         return activities
 

@@ -42,7 +42,7 @@ async def get_current_user(
                 detail="Nao foi possível validar o token",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -54,5 +54,12 @@ async def get_current_user(
         UserDB.username == username,
         UserDB.is_active == True
     ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Nao foi possível validar o token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
     return user

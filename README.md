@@ -139,7 +139,36 @@ Com o ambiente virtual ativo, execute:
 pytest
 ```
 
-Os testes cobrem a camada de servicos e os endpoints HTTP, utilizando banco SQLite em memoria para o ambiente de teste. Atualmente, a suite possui 110 testes.
+Para executar com saida detalhada ou filtrar por categoria:
+
+```powershell
+# Execucao detalhada
+pytest -v
+
+# Apenas testes de servicos
+pytest tests/service_tests/
+
+# Apenas testes HTTP
+pytest tests/http_tests/
+```
+
+Os testes utilizam banco SQLite em memoria isolado para execucao rapida e sem efeitos colaterais. Atualmente, a suite conta com **108 testes automatizados**, distribuidos em:
+
+- **Testes de Servicos (`tests/service_tests/` - 64 testes)**:
+  - `test_activity_service.py` (11 testes): criacao, listagem por lead, atualizacao, remocao e validacao de permissoes.
+  - `test_auth_service.py` (8 testes): registro, normalizacao de username, autenticacao e validacao de credenciais.
+  - `test_companies_service.py` (13 testes): cadastro com controle de perfil, listagem, atualizacao parcial, remocao e unicidade de CNPJ.
+  - `test_leads_service.py` (13 testes): criacao, controle de visibilidade por perfil (`sales`, `admin`, `manager`), edicao e remocao.
+  - `test_proposal_service.py` (11 testes): criacao, vinculo com leads, consulta, atualizacao e controle de acesso.
+  - `test_user_service.py` (8 testes): alteracao de username, troca de senha e checagem de autorizacao.
+
+- **Testes HTTP (`tests/http_tests/` - 44 testes)**:
+  - `test_activities_http.py` (9 testes): endpoints de criacao, consulta por lead, atualizacao e delecao de atividades.
+  - `test_companies_http.py` (10 testes): rotas de empresas, validacao de CNPJ e restricao para perfil `sales`.
+  - `test_leads_http.py` (11 testes): rotas de criacao, listagem com filtros de permissao, atualizacao e remocao de leads.
+  - `test_proposals_http.py` (8 testes): rotas de propostas, validacao de vinculo com lead e permissoes.
+  - `test_users_http.py` (6 testes): rotas de alteracao de username e senha com validacao de token e usuario autenticado.
+
 
 ## Comandos uteis
 

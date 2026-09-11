@@ -17,16 +17,6 @@ class ActivityRepository:
             ActivityDB.lead_id == lead_id,
         ).all()
     
-    def get_activity_by_user_id(self, user_id: int):
-        return self.db.query(ActivityDB).filter(
-            ActivityDB.user_id == user_id
-        ).all()
-
-
-    def get_my_activities(self, user_id: int):
-        return self.db.query(ActivityDB).filter(ActivityDB.user_id == user_id).all()
-
-
     def create_activity(self, user_id: int, data):
         activity = ActivityDB(
             lead_id=data.lead_id,

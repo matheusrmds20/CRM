@@ -11,11 +11,7 @@ def test_create_company_success_for_admin(company_service, admin_context, compan
     assert result.cnpj == company_payload.cnpj
 
 
-def test_create_company_success_for_manager(company_service, admin_context, company_payload):
-    result = company_service.create_company(admin_context, company_payload)
 
-    assert result.id is not None
-    assert result.name == company_payload.name.lower()
 
 
 def test_create_company_raises_unauthorized_for_sales_user(company_service, sales_context, company_payload):
@@ -84,10 +80,6 @@ def test_delete_company_success_for_admin(company_service, admin_context, compan
     assert result.id == company.id
 
 
-def test_delete_company_success_for_manager(company_service, admin_context, company):
-    result = company_service.delete_company(admin_context, company.id)
-
-    assert result.id == company.id
 
 
 def test_delete_company_raises_unauthorized_for_sales_user(company_service, sales_context, company):

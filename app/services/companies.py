@@ -2,7 +2,7 @@ from app.repositories.companies import CompanyRepository
 from sqlalchemy.orm import Session
 from app.schemas.companies import CompanyCreate, CompanyUpdate
 from app.api.exceps import ItemNotFoundError, ItemAlreadyExistsError, BadRequestError, NoPermissionError
-from app.utils.permissions import can_manage_admin
+from app.utils.permissions import can_manage_admin, can_manage_manager
 
 class CompanyService:
     def __init__(self, db: Session):
@@ -16,7 +16,7 @@ class CompanyService:
         if company_already_exists:
             raise ItemAlreadyExistsError("Company já existe")
 
-        if not can_manage_admin(user):
+        if not can_manage_manager(user):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
 
         data.name = data.name.lower()
@@ -24,28 +24,12 @@ class CompanyService:
         new_company = self.repository.create_company(data)
 
         return new_company
-    
-    def get_company_by_id(self, company_id: int):
-        company = self.repository.get_company_by_id(company_id)
 
-        
-        return company
-
-    def get_company_by_cnpj(self, cnpj: str):
-        company = self.repository.get_company_by_cnpj(cnpj)
-
-        return company
-
-    def get_company_by_name(self, name: str):
-        company = self.repository.get_company_by_name(name)
-
-        return company
-    
     def get_all_companies(self, user):
         companies = self.repository.get_all_companies()
 
 
-        if not can_manage_admin(user):
+        if not can_manage_manager(user):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
         
         
@@ -59,7 +43,7 @@ class CompanyService:
         if not company:
             raise ItemNotFoundError("Nenhum company encontrado")
 
-        if not can_manage_admin(user):
+        if not can_manage_manager(user):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
 
         
@@ -76,7 +60,7 @@ class CompanyService:
         if not company:
             raise ItemNotFoundError("Nenhum company encontrado")
 
-        if not can_manage_admin(user):
+        if not can_manage_manager(user):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
 
         to_delete = self.repository.delete_company(company)

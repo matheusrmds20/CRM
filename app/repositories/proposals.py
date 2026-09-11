@@ -16,19 +16,6 @@ class ProposalRepository:
             ProposalDB.lead_id == lead_id,
     ).all()
     
-    def get_proposal_by_user_id(self, user_id: int):
-        return self.db.query(ProposalDB).filter(ProposalDB.user_id == user_id).all()
-
-    def get_all_proposals(self, user_id: int = None):
-        query = self.db.query(ProposalDB)
-
-        if user_id is not None:
-            query = query.filter(ProposalDB.user_id == user_id)
-
-        return query.all()
-            
-    
-
     def create_proposal(self, user_id: int, data):
         proposal = ProposalDB(
             lead_id=data.lead_id,

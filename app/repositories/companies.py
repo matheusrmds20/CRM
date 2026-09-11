@@ -14,9 +14,6 @@ class CompanyRepository:
     def get_company_by_cnpj(self, cnpj: str):
         return self.db.query(CompanyDB).filter(CompanyDB.cnpj == cnpj).first()
 
-    def get_company_by_name(self, name: str):
-        return self.db.query(CompanyDB).filter(CompanyDB.name == name).first()
-    
     def get_all_companies(self):
         return self.db.query(CompanyDB).filter(CompanyDB.is_active == True).all()
 

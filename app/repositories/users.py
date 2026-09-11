@@ -7,23 +7,6 @@ class UserRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create_user(self, data):
-        user = UserDB(
-            username=data.username,
-            hashed_password=data.password,
-            is_active=data.is_active,
-            role=data.role,
-        )
-        try:
-
-            self.db.add(user)
-            self.db.commit()
-            self.db.refresh(user)
-            return user
-        except IntegrityError as e:
-            self.db.rollback()
-            raise e
-
     def get_me(self, user_id: int):
         return self.db.query(UserDB).filter(UserDB.id == user_id).first()
 
