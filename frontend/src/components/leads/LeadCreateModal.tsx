@@ -7,6 +7,7 @@ import {
   leadCreateSchema,
   type LeadCreateFormData,
 } from '../../schemas/lead.schema';
+import { getApiErrorMessage, getApiErrorStatus } from '../../services/apiError';
 
 interface LeadCreateModalProps {
   companies: CompanyApiResponse[];
@@ -58,16 +59,11 @@ export const LeadCreateModal: React.FC<LeadCreateModalProps> = ({
         ...data,
         description: data.description?.trim() || undefined,
       });
-    } catch (err: any) {
-      const status = err?.response?.status;
-      const detail = err?.response?.data?.detail;
-
-      if (status === 409) {
+    } catch (err) {
+      if (getApiErrorStatus(err) === 409) {
         setApiError('Já existe um lead cadastrado com este e-mail.');
-      } else if (detail) {
-        setApiError(typeof detail === 'string' ? detail : 'Erro ao criar lead. Tente novamente.');
       } else {
-        setApiError('Erro inesperado ao criar lead. Tente novamente.');
+        setApiError(getApiErrorMessage(err, 'Erro inesperado ao criar lead. Tente novamente.'));
       }
     }
   };
@@ -173,7 +169,7 @@ export const LeadCreateModal: React.FC<LeadCreateModalProps> = ({
             {errors.description && <p className="text-xs text-red-500 mt-1 ml-1">{errors.description.message}</p>}
           </div>
 
-          {/* Erro da API */}
+          {}
           {apiError && (
             <div className="flex items-start gap-2.5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium">
               <span className="mt-0.5 shrink-0">⚠️</span>

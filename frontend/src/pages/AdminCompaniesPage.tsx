@@ -4,6 +4,7 @@ import { Header } from '../components/layout/Header';
 import { CompanyModal } from '../components/companies/CompanyModal';
 import { type CompanyItem, type CompanyFormData } from '../schemas/company.schema';
 import { companiesService } from '../services/companies.service';
+import { getApiErrorMessage } from '../services/apiError';
 import { Plus, Edit3, Trash2, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface AdminCompaniesPageProps {
@@ -20,7 +21,6 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
 
   const fetchCompanies = async () => {
     try {
-      setIsLoading(true);
       const data = await companiesService.getAll();
       const mappedCompanies: CompanyItem[] = data.map((c, index) => {
         const iconTypes: Array<CompanyItem['iconType']> = ['tree', 'gear', 'novo', 'textil', 'tech', 'building'];
@@ -49,15 +49,12 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
     fetchCompanies();
   }, []);
 
-  const totalPages = Math.ceil(companies.length / companiesPerPage);
-  const firstCompanyIndex = (currentPage - 1) * companiesPerPage;
+  
+  
+  const totalPages = Math.max(1, Math.ceil(companies.length / companiesPerPage));
+  const effectivePage = Math.min(currentPage, totalPages);
+  const firstCompanyIndex = (effectivePage - 1) * companiesPerPage;
   const visibleCompanies = companies.slice(firstCompanyIndex, firstCompanyIndex + companiesPerPage);
-
-  useEffect(() => {
-    if (totalPages > 0 && currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
 
   const handleCreateNew = () => {
     setEditingCompany(null);
@@ -72,11 +69,12 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
   const handleDelete = async (id: string) => {
     if (confirm('Tem certeza que deseja excluir esta empresa?')) {
       try {
+        setIsLoading(true);
         await companiesService.delete(Number(id));
         setCompanies((prev) => prev.filter((c) => c.id !== id));
-      } catch (err: any) {
+      } catch (err) {
         console.error('Erro ao deletar empresa:', err);
-        alert(err.response?.data?.detail || 'Erro ao deletar empresa');
+        alert(getApiErrorMessage(err, 'Erro ao deletar empresa'));
       }
     }
   };
@@ -84,11 +82,19 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
   const handleSaveCompany = async (formData: CompanyFormData) => {
     try {
       if (editingCompany) {
+        setIsLoading(true);
+        const cnpj = formData.cnpj?.trim() || '';
+        if (!cnpj) {
+          alert('Informe o CNPJ da empresa.');
+          return;
+        }
         await companiesService.update(Number(editingCompany.id), {
           name: formData.name,
+          cnpj,
         });
       } else {
-        const cnpj = formData.sector?.trim() || '';
+        setIsLoading(true);
+        const cnpj = formData.cnpj?.trim() || '';
         if (!cnpj) {
           alert('Informe o CNPJ da empresa.');
           return;
@@ -99,23 +105,23 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
         });
       }
       await fetchCompanies();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao salvar empresa:', err);
-      alert(err.response?.data?.detail || 'Erro ao salvar empresa');
+      alert(getApiErrorMessage(err, 'Erro ao salvar empresa'));
     }
   };
 
   return (
     <div className="flex h-screen w-screen bg-[#FAF6F0] overflow-hidden">
-      {/* Sidebar Lateral */}
+      {}
       <Sidebar currentPath="empresas" onNavigate={onNavigate} />
 
-      {/* Conteúdo Principal */}
+      {}
       <div className="flex-1 flex flex-col overflow-y-auto">
-        <Header userName="Maria Silva" onNavigate={onNavigate} />
+        <Header onNavigate={onNavigate} />
 
         <main className="p-8 sm:p-10 space-y-6 max-w-7xl">
-          {/* Header da Página com Título e Botão de Adicionar */}
+          {}
           <div className="flex items-center justify-between">
             <h2 className="text-3xl font-bold text-[#3B2317] tracking-tight">
               Gestão de Empresas
@@ -219,7 +225,7 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
             <div className="flex flex-wrap items-center justify-center gap-2 pt-4 text-sm font-semibold text-[#685A52]">
               <button
                 onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-                disabled={currentPage === 1}
+                disabled={effectivePage === 1}
                 aria-label="Página anterior"
                 className="flex items-center gap-1 rounded-xl border border-[#DFD6C7] bg-white px-3 py-2 transition-colors hover:bg-[#EFE8DC] disabled:cursor-not-allowed disabled:opacity-40"
               >
@@ -232,9 +238,9 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
                   key={page}
                   onClick={() => setCurrentPage(page)}
                   aria-label={`Ir para a página ${page}`}
-                  aria-current={currentPage === page ? 'page' : undefined}
+                  aria-current={effectivePage === page ? 'page' : undefined}
                   className={`h-9 min-w-9 rounded-xl border px-3 transition-colors ${
-                    currentPage === page
+                    effectivePage === page
                       ? 'border-[#BA5827] bg-[#BA5827] text-white shadow-sm'
                       : 'border-[#DFD6C7] bg-white text-[#685A52] hover:bg-[#EFE8DC] hover:text-[#3B2317]'
                   }`}
@@ -245,7 +251,7 @@ export const AdminCompaniesPage: React.FC<AdminCompaniesPageProps> = ({ onNaviga
 
               <button
                 onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-                disabled={currentPage === totalPages}
+                disabled={effectivePage === totalPages}
                 aria-label="Próxima página"
                 className="flex items-center gap-1 rounded-xl border border-[#DFD6C7] bg-white px-3 py-2 transition-colors hover:bg-[#EFE8DC] disabled:cursor-not-allowed disabled:opacity-40"
               >

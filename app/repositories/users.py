@@ -1,7 +1,6 @@
-from app.models.users import UserDB
+from app.models.users import Roles, UserDB
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-
 
 class UserRepository:
     def __init__(self, db: Session):
@@ -15,14 +14,29 @@ class UserRepository:
 
     def get_user_by_id(self, user_id: int):
         return self.db.query(UserDB).filter(UserDB.id == user_id).first()
-    
+
     def get_user_by_username(self, username: str):
         return self.db.query(UserDB).filter(UserDB.username == username).first()
 
-        
+    def count_active_admins(self):
+        return self.db.query(UserDB).filter(
+            UserDB.role == Roles.ADMIN,
+            UserDB.is_active == True,
+        ).count()
+
+    def deactivate_user(self, user: UserDB):
+        """Soft delete: desativa o usuario preservando seus leads, propostas e atividades."""
+        try:
+            user.is_active = False
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+        except IntegrityError as e:
+            self.db.rollback()
+            raise e
+
     def update_username(self, user_id: int, new_username: str):
         user = self.get_user_by_id(user_id)
-
 
         user.username = new_username
 
@@ -37,6 +51,9 @@ class UserRepository:
     def update_user(self, user_id: int, username: str, role):
         user = self.get_user_by_id(user_id)
         user.username = username
+        if user.role != role:
+
+            user.token_version += 1
         user.role = role
 
         try:
@@ -46,11 +63,13 @@ class UserRepository:
         except IntegrityError as e:
             self.db.rollback()
             raise e
-        
+
     def update_password(self, user_id: int, new_password: str):
         user = self.get_user_by_id(user_id)
         user.hashed_password = new_password
-        
+
+        user.token_version += 1
+
         try:
             self.db.commit()
             self.db.refresh(user)
@@ -66,4 +85,4 @@ class UserRepository:
             return user
         except IntegrityError as e:
             self.db.rollback()
-            raise e 
+            raise e

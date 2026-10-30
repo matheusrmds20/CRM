@@ -1,11 +1,10 @@
 from app.repositories.users import UserRepository
 from app.schemas.users import UserUpdate, UserUpdateUsername, UserUpdatePassword
 from sqlalchemy.orm import Session
-from app.api.exceps import BadRequestError, NoPermissionError, ItemNotFoundError
+from app.api.exceps import BadRequestError, NoPermissionError, ItemNotFoundError, ItemAlreadyExistsError
 from app.core.security import verify_password, hash_password
+from app.models.users import Roles
 from app.utils.permissions import can_manage, can_manage_admin
-
-
 
 class UserService:
     def __init__(self, db: Session):
@@ -19,9 +18,12 @@ class UserService:
     def get_user_by_id(self, user, user_id: int):
         user_repo = self.repository.get_user_by_id(user_id)
 
+        if not user_repo:
+            raise ItemNotFoundError("Usuario nao encontrado")
+
         if not can_manage(user, user_repo.id):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
-        
+
         return user_repo
 
     def get_all_users(self, user):
@@ -31,20 +33,19 @@ class UserService:
 
         return self.repository.get_all_users()
 
-
-
     def update_username(self, user, data: UserUpdateUsername, target_user_id: int):
         target_id = target_user_id if target_user_id is not None else user.id
         user_repo = self.repository.get_user_by_id(target_id)
 
-
-        
         if not user_repo:
             raise ItemNotFoundError("Usuario nao encontrado")
 
         if not can_manage(user, user_repo.id):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
 
+        existing_user = self.repository.get_user_by_username(data.username)
+        if existing_user and existing_user.id != target_id:
+            raise ItemAlreadyExistsError("Usuário ja existente")
 
         return self.repository.update_username(target_id, data.username)
 
@@ -59,6 +60,13 @@ class UserService:
         existing_user = self.repository.get_user_by_username(data.username)
         if existing_user and existing_user.id != target_user_id:
             raise BadRequestError("Usuário ja existente")
+
+        if target_user_id == user.id and data.role != Roles.ADMIN:
+            raise BadRequestError("Não é possível alterar o próprio perfil")
+
+        if user_repo.role == Roles.ADMIN and data.role != Roles.ADMIN:
+            if self.repository.count_active_admins() <= 1:
+                raise BadRequestError("O sistema precisa de pelo menos um administrador ativo")
 
         return self.repository.update_user(target_user_id, data.username, data.role)
 
@@ -87,7 +95,13 @@ class UserService:
         if not user_repo:
             raise ItemNotFoundError("Nenhum user encontrado")
 
+        if target_id == user.id:
+            raise BadRequestError("Não é possível excluir o próprio usuário")
+
         if not can_manage(user, user_repo.id):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
-        
-        return self.repository.delete_user(user_repo)
+
+        if user_repo.role == Roles.ADMIN and self.repository.count_active_admins() <= 1:
+            raise BadRequestError("O sistema precisa de pelo menos um administrador ativo")
+
+        return self.repository.deactivate_user(user_repo)

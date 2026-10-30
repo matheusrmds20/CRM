@@ -10,7 +10,6 @@ settings = get_settings()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
-
 async def get_db():
     db = SessionLocal()
     try:
@@ -18,10 +17,8 @@ async def get_db():
     finally:
         db.close()
 
-
-
 async def get_current_user(
-    db: Session = Depends(get_db), 
+    db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
     try:
@@ -34,9 +31,9 @@ async def get_current_user(
             options=options
         )
 
-        
         username: str = payload.get("sub")
-        if username is None:
+        token_version: int = payload.get("ver")
+        if username is None or token_version is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Nao foi possível validar o token",
@@ -55,11 +52,11 @@ async def get_current_user(
         UserDB.is_active == True
     ).first()
 
-    if not user:
+    if not user or user.token_version != token_version:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Nao foi possível validar o token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     return user

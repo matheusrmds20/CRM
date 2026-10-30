@@ -4,47 +4,45 @@ from app.api.exceps import BadRequestError, ItemAlreadyExistsError, ItemNotFound
 from app.repositories.leads import LeadsRepository
 from app.repositories.proposals import ProposalRepository
 from app.schemas.proposals import ProposalCreate, ProposalUpdate
-from app.utils.permissions import can_manage
+from app.utils.permissions import can_edit_lead
 
 class ProposalService:
     def __init__(self, db: Session):
         self.repository = ProposalRepository(db)
         self.leads_repository = LeadsRepository(db)
 
-
     def create_proposal(self, user, data: ProposalCreate):
         if data.status == "":
             raise BadRequestError("Nenhum tipo de proposal foi selecionado")
-
 
         lead = self.leads_repository.get_lead_by_id(data.lead_id)
         if not lead:
             raise ItemNotFoundError("Lead nao encontrado")
 
-        if not can_manage(user, lead.user_id):
+        if not can_edit_lead(user, lead.user_id):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
 
         return self.repository.create_proposal(user.id, data)
 
     def get_proposal_by_lead_id(self, user, lead_id: int):
-        proposals = self.repository.get_proposal_by_lead_id(lead_id)
 
-        if not all(can_manage(user, p.user_id) for p in proposals):
+        lead = self.leads_repository.get_lead_by_id(lead_id)
+        if not lead:
+            raise ItemNotFoundError("Lead nao encontrado")
+
+        if not can_edit_lead(user, lead.user_id):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
 
-        return proposals
+        return self.repository.get_proposal_by_lead_id(lead_id)
 
     def update_proposal(self, proposal_id: int, user, data: ProposalUpdate):
         proposal = self.repository.get_proposal_by_id(proposal_id)
 
-
         if not proposal:
             raise ItemNotFoundError("Nenhum proposal encontrado")
 
-
-        if not can_manage(user, proposal.user_id):
+        if not can_edit_lead(user, proposal.user_id):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
-
 
         for field, value in data.model_dump(exclude_unset=True).items():
             setattr(proposal, field, value)
@@ -56,7 +54,7 @@ class ProposalService:
         if not proposal:
             raise ItemNotFoundError("Nenhum proposal encontrado")
 
-        if not can_manage(user, proposal.user_id):
+        if not can_edit_lead(user, proposal.user_id):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
 
         return self.repository.delete_proposal(proposal)

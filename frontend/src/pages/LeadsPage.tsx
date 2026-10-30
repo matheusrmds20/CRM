@@ -7,6 +7,7 @@ import { LeadDetailModal } from '../components/leads/LeadDetailModal';
 import { type LeadCreateFormData, type LeadItem, type LeadStatus } from '../schemas/lead.schema';
 import { leadsService, type LeadApiResponse } from '../services/leads.service';
 import { companiesService, type CompanyApiResponse } from '../services/companies.service';
+import { getApiErrorStatus } from '../services/apiError';
 import { Filter, ArrowUpDown, Loader2, Plus, Search } from 'lucide-react';
 
 const allStatuses: Array<'Todos os Statuses' | LeadStatus> = [
@@ -33,6 +34,7 @@ const mapLead = (lead: LeadApiResponse): LeadItem => ({
   company: lead.description || (lead.company_id ? `Empresa #${lead.company_id}` : 'Sem Empresa'),
   status: statusApiToFrontend[lead.status] || 'Novo',
   date: new Date(lead.created_at).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }),
+  createdDate: new Date(lead.created_at).getTime(),
   targetDate: lead.updated_at ? new Date(lead.updated_at).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }) : undefined,
   email: lead.email,
   phone: lead.phone || undefined,
@@ -48,6 +50,7 @@ interface LeadsPageProps {
 export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
   const [leads, setLeads] = useState<LeadItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<'Todos os Statuses' | LeadStatus>('Todos os Statuses');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -67,7 +70,13 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
         setLeads(leadData.map(mapLead));
         setCompanies(companyData);
       })
-      .catch((err) => console.error('Erro ao carregar dados de leads:', err))
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error('Erro ao carregar dados de leads:', err);
+        setError(getApiErrorStatus(err) === 403
+          ? 'Você não tem permissão para visualizar os leads.'
+          : 'Não foi possível carregar os leads. Tente novamente.');
+      })
       .finally(() => {
         if (isMounted) setIsLoading(false);
       });
@@ -100,7 +109,7 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
     }
   };
 
-  // Filtragem por status, busca por texto e Ordenação dos Leads
+  
   const filteredAndSortedLeads = useMemo(() => {
     let result = [...leads];
 
@@ -120,9 +129,9 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
 
     result.sort((a, b) => {
       if (sortOrder === 'asc') {
-        return a.date.localeCompare(b.date);
+        return a.createdDate - b.createdDate;
       }
-      return b.date.localeCompare(a.date);
+      return b.createdDate - a.createdDate;
     });
 
     return result;
@@ -130,15 +139,15 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
 
   return (
     <div className="flex h-screen w-screen bg-[#FAF6F0] overflow-hidden">
-      {/* Sidebar Lateral */}
+      {}
       <Sidebar currentPath="leads" onNavigate={onNavigate} />
 
-      {/* Área Central */}
+      {}
       <div className="flex-1 flex flex-col overflow-y-auto">
-        <Header userName="Maria Silva" onNavigate={onNavigate} />
+        <Header onNavigate={onNavigate} />
 
         <main className="p-8 sm:p-10 space-y-8 max-w-7xl">
-          {/* Header da Página com Título, Busca, Filtro e Ordenação */}
+          {}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <h2 className="text-3xl font-bold text-[#3B2317] tracking-tight">
               Todas as Leads
@@ -153,7 +162,7 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
                 <span>Criar Lead</span>
               </button>
 
-              {/* Barra de Busca de Leads */}
+              {}
               <div className="relative flex items-center">
                 <Search className="absolute left-3.5 w-4 h-4 text-[#8C988D]" />
                 <input
@@ -229,9 +238,15 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
             </div>
           )}
 
-          {!isLoading && filteredAndSortedLeads.length === 0 && (
+          {!isLoading && filteredAndSortedLeads.length === 0 && !error && (
             <div className="text-center py-16 bg-[#EFE8DC]/50 rounded-3xl border border-[#DFD6C7]">
               <p className="text-[#7D7068] text-sm">Nenhum lead encontrado.</p>
+            </div>
+          )}
+
+          {!isLoading && error && (
+            <div className="text-center py-16 bg-[#EFE8DC]/50 rounded-3xl border border-[#DFD6C7]">
+              <p className="text-[#B75828] text-sm font-semibold">{error}</p>
             </div>
           )}
         </main>

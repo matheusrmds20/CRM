@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Shield, Trash2, UserRound, X } from 'lucide-react';
 import { type UserResponse } from '../../services/auth.service';
 import { type AdminUserRole } from '../../services/users.service';
+import { getApiErrorMessage } from '../../services/apiError';
 
 interface UserManagementModalProps {
   user: UserResponse | null;
@@ -50,8 +51,8 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
     try {
       await onSave(user.id, { username, role });
       onClose();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Não foi possível atualizar o usuário.');
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Não foi possível atualizar o usuário.'));
     } finally {
       setIsSaving(false);
     }
@@ -63,8 +64,8 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
     try {
       await onDelete(user.id);
       onClose();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Não foi possível excluir o usuário.');
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'Não foi possível excluir o usuário.'));
     } finally {
       setIsDeleting(false);
     }

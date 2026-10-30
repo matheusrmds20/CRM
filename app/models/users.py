@@ -1,15 +1,13 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum 
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum, text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base import Base
 from enum import Enum as PyEnum
 
-
 class Roles(str, PyEnum):
     ADMIN = "admin"
     MANAGER = "manager"
-    SALES = "sales"                
-
+    SALES = "sales"
 
 class UserDB(Base):
     __tablename__ = "users"
@@ -19,6 +17,8 @@ class UserDB(Base):
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     role = Column(Enum(Roles), default=Roles.SALES, nullable=False)
+
+    token_version = Column(Integer, nullable=False, default=0, server_default=text("0"))
     created_at = Column(DateTime(timezone=True), server_default=func.now() , nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 

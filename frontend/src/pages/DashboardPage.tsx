@@ -6,6 +6,7 @@ import { CompanyCard, type Company } from '../components/dashboard/CompanyCard';
 import { LeadDetailModal } from '../components/leads/LeadDetailModal';
 import { leadsService } from '../services/leads.service';
 import { companiesService } from '../services/companies.service';
+import { getApiErrorStatus } from '../services/apiError';
 import { Loader2 } from 'lucide-react';
 
 const statusApiToFrontend: Record<string, 'Novo' | 'Em Contato' | 'Ganho' | 'Perdido'> = {
@@ -23,6 +24,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
 
@@ -30,6 +32,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         const [leadsData, companiesData] = await Promise.all([
           leadsService.getAll().catch(() => []),
           companiesService.getAll().catch(() => []),
@@ -42,6 +45,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           company: l.description || (l.company_id ? `Empresa #${l.company_id}` : 'Sem Empresa'),
           status: statusApiToFrontend[l.status] || 'Novo',
           date: new Date(l.created_at).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }),
+          createdDate: new Date(l.created_at).getTime(),
           email: l.email,
           phone: l.phone || undefined,
           subject: l.subject,
@@ -60,6 +64,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         setCompanies(mappedCompanies);
       } catch (err) {
         console.error('Erro ao carregar dados do dashboard:', err);
+        setError(getApiErrorStatus(err) === 403
+          ? 'Você não tem permissão para visualizar estes dados.'
+          : 'Não foi possível carregar o dashboard. Tente novamente.');
       } finally {
         setIsLoading(false);
       }
@@ -69,15 +76,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   }, []);
   return (
     <div className="flex h-screen w-screen bg-[#FAF6F0] overflow-hidden">
-      {/* Sidebar Lateral */}
+      {}
       <Sidebar currentPath="dashboard" onNavigate={onNavigate} />
 
-      {/* Área Central de Conteúdo */}
+      {}
       <div className="flex-1 flex flex-col overflow-y-auto">
-        <Header userName="Maria Silva" onNavigate={onNavigate} />
+        <Header onNavigate={onNavigate} />
 
         <main className="p-8 sm:p-10 space-y-10 max-w-7xl">
-          {/* Seção Recent Leads */}
+          {error && (
+            <div className="bg-[#EFE8DC]/50 rounded-3xl border border-[#DFD6C7] p-6 text-center">
+              <p className="text-[#B75828] text-sm font-semibold">{error}</p>
+            </div>
+          )}
+          {}
           <section>
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-xl font-bold text-[#3B2317]">Leads recentes</h3>

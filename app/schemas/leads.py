@@ -2,24 +2,20 @@ from pydantic import BaseModel, Field, ConfigDict, EmailStr, field_validator
 from app.models.leads import StatusLeads
 from datetime import datetime
 
-
-
-
 class LeadBase(BaseModel):
     name: str = Field(min_length=3, max_length=100)
     email: EmailStr
     phone: str | None = Field(min_length=9, max_length=11)
-    company_id: int | None 
+    company_id: int | None = None
     subject: str = Field(min_length=3, max_length=100)
-    description: str | None = Field(min_length=3, max_length=500)
-    estimated_value: float 
+    description: str | None = Field(default=None, min_length=3, max_length=500)
+    estimated_value: float = Field(ge=0)
     status: StatusLeads = Field(default=StatusLeads.NEW)
 
     @field_validator("company_id", mode="before")
     @classmethod
     def zero_to_none(cls, value):
         return None if value == 0 else value
-
 
 class LeadCreate(LeadBase):
     pass
@@ -30,9 +26,9 @@ class LeadUpdate(BaseModel):
     phone: str | None = Field(default=None, min_length=9, max_length=11)
     company_id: int | None = None
     status: StatusLeads | None = None
-    subject: str | None = None
-    description: str | None = None
-    estimated_value: float | None = None
+    subject: str | None = Field(default=None, min_length=3, max_length=100)
+    description: str | None = Field(default=None, min_length=3, max_length=500)
+    estimated_value: float | None = Field(default=None, ge=0)
     is_active: bool | None = None
 
     @field_validator("company_id", mode="before")
@@ -55,7 +51,4 @@ class LeadResponse(BaseModel):
     updated_at: datetime | None
     is_active: bool
 
-
     model_config = ConfigDict(from_attributes=True)
-
-    

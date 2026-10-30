@@ -9,8 +9,9 @@ import {
   type ProfileSettingsFormData, 
   type CreateUserFormData 
 } from '../schemas/config.schema';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import { usersService } from '../services/users.service';
+import { getApiErrorMessage } from '../services/apiError';
 import { authService } from '../services/auth.service';
 import { type UserResponse } from '../services/auth.service';
 import { UserManagementModal } from '../components/users/UserManagementModal';
@@ -47,7 +48,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onNavigate, isAdmin = tr
 
   const formatRole = (role: UserResponse['role']) => ({ admin: 'Administrador', manager: 'Gerente', sales: 'Vendedor' })[role];
 
-  // Formulário 1: Profile Settings
+  
   const {
     register: registerProfile,
     handleSubmit: handleSubmitProfile,
@@ -63,7 +64,12 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onNavigate, isAdmin = tr
     },
   });
 
-  // Formulário 2: Admin Create User
+  
+  useEffect(() => {
+    resetProfile({ username: user?.username ?? '', currentPassword: '', newPassword: '', confirmNewPassword: '' });
+  }, [user?.username, resetProfile]);
+
+  
   const {
     register: registerUser,
     handleSubmit: handleSubmitUser,
@@ -81,14 +87,15 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onNavigate, isAdmin = tr
 
   const onProfileSubmit = async (data: ProfileSettingsFormData) => {
     if (!user) return;
+    if (data.username.trim().length < 3) return;
     setProfileMessage(null);
     try {
-      // Se alterou o username
+      
       if (data.username !== user.username) {
         await usersService.updateUsername(user.id, { username: data.username });
       }
 
-      // Se informou nova senha
+      
       if (data.newPassword && data.currentPassword) {
         await usersService.updatePassword(user.id, {
           current_password: data.currentPassword,
@@ -104,12 +111,11 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onNavigate, isAdmin = tr
         newPassword: '',
         confirmNewPassword: '',
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao atualizar perfil:', err);
-      const detail = err.response?.data?.detail;
       setProfileMessage({ 
         type: 'error', 
-        text: typeof detail === 'string' ? detail : 'Erro ao atualizar dados do perfil.' 
+        text: getApiErrorMessage(err, 'Erro ao atualizar dados do perfil.') 
       });
     }
   };
@@ -134,12 +140,11 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onNavigate, isAdmin = tr
         text: `Usuário "${data.username}" criado! (Perfil: ${data.role === 'sales' ? 'Vendedor' : data.role === 'manager' ? 'Gerente' : 'Administrador'})`
       });
       resetUser();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao criar usuário:', err);
-      const detail = err.response?.data?.detail;
       setUserMessage({ 
         type: 'error', 
-        text: typeof detail === 'string' ? detail : 'Erro ao criar usuário.' 
+        text: getApiErrorMessage(err, 'Erro ao criar usuário.') 
       });
     }
   };
@@ -161,17 +166,17 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onNavigate, isAdmin = tr
 
   return (
     <div className="flex h-screen w-screen bg-[#FAF6F0] overflow-hidden">
-      {/* Sidebar sem 'Atividades' */}
+      {}
       <Sidebar currentPath="config" onNavigate={onNavigate} />
 
-      {/* Conteúdo Principal */}
+      {}
       <div className="flex-1 flex flex-col overflow-y-auto">
-        <Header userName="Maria Silva" onNavigate={onNavigate} />
+        <Header onNavigate={onNavigate} />
 
         <main className="p-8 sm:p-10 max-w-6xl space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
             
-            {/* CARD 1: Profile Settings */}
+            {}
             <div>
               <h2 className="text-2xl font-bold text-[#8A4A28] mb-4">
                 Configurações de perfil
@@ -225,7 +230,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onNavigate, isAdmin = tr
                       Alterar senha
                     </h4>
 
-                    {/* Current Password */}
+                    {}
                     <div className="mb-3">
                       <input
                         type="password"
@@ -251,7 +256,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onNavigate, isAdmin = tr
                       )}
                     </div>
 
-                    {/* Confirm New Password */}
+                    {}
                     <div>
                       <input
                         type="password"
@@ -265,7 +270,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onNavigate, isAdmin = tr
                     </div>
                   </div>
 
-                  {/* Botão Salvar Alterações */}
+                  {}
                   <div className="pt-4">
                     <button
                       type="submit"
@@ -300,7 +305,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onNavigate, isAdmin = tr
                   )}
 
                   <form onSubmit={handleSubmitUser(onUserSubmit)} className="space-y-5">
-                    {/* Username */}
+                    {}
                     <div>
                       <input
                         type="text"
@@ -326,7 +331,7 @@ export const ConfigPage: React.FC<ConfigPageProps> = ({ onNavigate, isAdmin = tr
                       )}
                     </div>
 
-                    {/* Confirm Password */}
+                    {}
                     <div>
                       <input
                         type="password"

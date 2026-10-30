@@ -1,52 +1,34 @@
-import asyncio
-import time
-from contextlib import asynccontextmanager
-from pathlib import Path
 from fastapi import FastAPI, Request
-from app.api.router import router
-from fastapi.responses import JSONResponse
-from fastapi.requests import Request
-from app.api.exceps import ItemNotFoundError, NoPermissionError, ItemAlreadyExistsError, DatabaseIntegrityError, LoginError, BadRequestError
-from sqlalchemy.exc import IntegrityError
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from sqlalchemy.exc import IntegrityError
 from starlette.middleware.base import BaseHTTPMiddleware
-from alembic import command
-from alembic.config import Config
 
+from app.api.exceps import (
+    BadRequestError,
+    DatabaseIntegrityError,
+    ItemAlreadyExistsError,
+    ItemNotFoundError,
+    LoginError,
+    NoPermissionError,
+)
+from app.api.router import router
+from app.core.config import get_settings
+from app.core.rate_limit import limiter
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-ALEMBIC_INI = BASE_DIR / "alembic.ini"
-
-
-
-
-
+settings = get_settings()
 
 app = FastAPI()
 
-
-origins = [
-    "http://localhost",
-    "http://127.0.0.1",
-    "http://localhost:5500",
-    "http://127.0.0.1:5500",
-    "http://localhost:5173",
-    "http://localhost:5173/leads",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
-
-limiter = Limiter(key_func=get_remote_address)
 
 app.state.limiter = limiter
 
@@ -60,19 +42,16 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
-        # response.headers["Content-Security-Policy"] = "default-src 'self'"
-        
+
         return response
 
 app.add_middleware(SecurityMiddleware)
 
-app.include_router(router, prefix="/api/v1")    
-
+app.include_router(router, prefix="/api/v1")
 
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
-
 
 @app.exception_handler(ItemNotFoundError)
 def item_not_found_handler(request: Request, exc: ItemNotFoundError):
@@ -102,7 +81,6 @@ def database_integrity_handler(request: Request, exc: DatabaseIntegrityError):
         content={"detail": "Nao foi possivel criar ou atualizar o item por conflito de integridade"},
     )
 
-
 @app.exception_handler(LoginError)
 def login_error_handler(request: Request, exc: LoginError):
     return JSONResponse(
@@ -123,4 +101,3 @@ def sql_integrity_error_handler(request: Request, exc: IntegrityError):
         status_code=400,
         content={"detail": "Empresa informada nao existe ou conflito de integridade"},
     )
-

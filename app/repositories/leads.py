@@ -31,13 +31,11 @@ class LeadsRepository:
         except IntegrityError as e:
             self.db.rollback()
             raise e
-    
 
     def get_lead_by_email(self, email: str):
         return self.db.query(LeadsDB).filter(
             LeadsDB.email == email,
 ).first()
-    
 
     def get_all_leads(self, user_id: int = None):
         query = self.db.query(LeadsDB).filter(
@@ -51,16 +49,14 @@ class LeadsRepository:
 
         return query.all()
 
-
-
-    # Atualização dos Leads
-
-
-
-
+    def count_by_company_id(self, company_id: int) -> int:
+        """Conta leads ativos vinculados a uma empresa."""
+        return self.db.query(LeadsDB).filter(
+            LeadsDB.company_id == company_id,
+            LeadsDB.is_active == True,
+        ).count()
 
     def update_lead(self, lead):
-
 
         try:
             self.db.add(lead)
@@ -70,15 +66,6 @@ class LeadsRepository:
         except IntegrityError as e:
             self.db.rollback()
             raise e
-
-
-
-
-    # Deletação dos Leads
-
-
-
-
 
     def delete_lead(self, lead):
 

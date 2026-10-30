@@ -5,7 +5,8 @@ import { CompaniesPage } from './pages/CompaniesPage';
 import { AdminCompaniesPage } from './pages/AdminCompaniesPage';
 import { LeadsPage } from './pages/LeadsPage';
 import { ConfigPage } from './pages/ConfigPage';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { useAuth } from './contexts/useAuth';
 
 function MainApp() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -53,4 +54,3 @@ function App() {
 }
 
 export default App;
-

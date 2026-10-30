@@ -1,9 +1,8 @@
 import React from 'react';
 import { LogOut } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 
 interface HeaderProps {
-  userName?: string;
   onNavigate?: (path: string) => void;
 }
 
@@ -13,7 +12,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
 
   return (
     <header className="h-20 bg-transparent flex items-center justify-between px-8 py-4 border-b border-[#E3DBD0]">
-      {/* Título de Boas-vindas */}
+      {}
       <h2 className="text-2xl font-bold text-[#3B2317] tracking-tight">
         Boas-vindas, {displayName}
       </h2>
@@ -43,4 +42,3 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
     </header>
   );
 };
-

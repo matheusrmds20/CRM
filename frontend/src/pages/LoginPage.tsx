@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { getApiErrorMessage } from '../services/apiError';
 import { User, Lock, AlertCircle } from 'lucide-react';
 import { loginSchema, type LoginFormData } from '../schemas/auth.schema';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -25,24 +26,17 @@ export const LoginPage: React.FC = () => {
     setApiError(null);
     try {
       await login(data.username, data.password);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro no login:', err);
-      const detail = err.response?.data?.detail;
-      if (typeof detail === 'string') {
-        setApiError(detail);
-      } else if (Array.isArray(detail) && detail[0]?.msg) {
-        setApiError(detail[0].msg);
-      } else {
-        setApiError('Não foi possível conectar ao servidor. Verifique suas credenciais.');
-      }
+      setApiError(getApiErrorMessage(err, 'Não foi possível conectar ao servidor. Verifique suas credenciais.'));
     }
   };
 
   return (
     <main className="h-screen w-screen overflow-hidden grid grid-cols-1 md:grid-cols-2">
-      {/* Lado Esquerdo - Visual Gradiente & Logo em tela cheia */}
+      {}
       <div className="relative bg-gradient-to-br from-[#CD8463] via-[#C59B80] to-[#98AE9D] flex items-center justify-center p-8 overflow-hidden h-full">
-        {/* Ondas decorativas em SVG concêntricas */}
+        {}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-35">
           <svg
             className="w-[180%] h-[180%] max-w-none"

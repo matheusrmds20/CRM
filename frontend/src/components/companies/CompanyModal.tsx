@@ -27,7 +27,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
     resolver: zodResolver(companySchema),
     defaultValues: {
       name: '',
-      sector: '',
+      cnpj: '',
       lastActivity: '',
       mainContact: '',
       status: 'Ativo',
@@ -74,7 +74,8 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
     if (initialData) {
       reset({
         name: initialData.name,
-        sector: initialData.sector,
+        
+        cnpj: initialData.sector,
         lastActivity: initialData.lastActivity,
         mainContact: initialData.mainContact,
         status: initialData.status,
@@ -86,7 +87,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
     } else {
       reset({
         name: '',
-        sector: '',
+        cnpj: '',
         lastActivity: 'Hoje, 10:00',
         mainContact: '',
         status: 'Ativo',
@@ -103,7 +104,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-md ${isClosing ? 'animate-overlay-exit' : 'animate-overlay-fade'}`}>
       <div className={`relative w-full max-w-lg bg-[#FAF6F0] rounded-[2rem] border border-[#E3DBD0] shadow-[0_25px_60px_-15px_rgba(59,35,23,0.35)] overflow-hidden ${isClosing ? 'animate-modal-exit' : 'animate-modal-enter'} hover:shadow-[0_30px_70px_-15px_rgba(59,35,23,0.45)]`}>
         
-        {/* Header do Modal */}
+        {}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#E3DBD0] bg-[#EFE8DC]">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-[#BA5827] flex items-center justify-center text-white">
@@ -140,7 +141,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
               <p className="text-xs text-red-500 mt-1 ml-1">{errors.name.message}</p>
             )}
           </div>
-          {/* CNPJ */}
+          {}
           <div>
             <label className="block text-xs font-semibold text-[#48372F] mb-1.5 ml-1">
               CNPJ <span className="text-red-400">*</span>
@@ -148,14 +149,14 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({
             <input
               type="text"
               placeholder="Ex: 11.222.333/0001-81"
-              {...register('sector')}
+              {...register('cnpj')}
               className={`w-full px-4 py-2.5 bg-[#F4F1EA] border ${
-                errors.sector ? 'border-red-400' : 'border-[#B8AA9A]'
+                errors.cnpj ? 'border-red-400' : 'border-[#B8AA9A]'
               } rounded-xl text-sm text-[#3B2317] focus:outline-none focus:ring-2 focus:ring-[#77917B]/20`}
             />
             <p className="text-[10px] text-[#8A7B72] mt-1 ml-1">Digite um CNPJ válido com ou sem pontuação.</p>
-            {errors.sector && (
-              <p className="text-xs text-red-500 mt-1 ml-1">{errors.sector.message}</p>
+            {errors.cnpj && (
+              <p className="text-xs text-red-500 mt-1 ml-1">{errors.cnpj.message}</p>
             )}
           </div>
 

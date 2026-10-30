@@ -4,6 +4,7 @@ import { Header } from '../components/layout/Header';
 import { CompanyCardDetailed } from '../components/companies/CompanyCardDetailed';
 import { type CompanyItem } from '../schemas/company.schema';
 import { companiesService } from '../services/companies.service';
+import { getApiErrorStatus } from '../services/apiError';
 import { Filter, Loader2 } from 'lucide-react';
 
 interface CompaniesPageProps {
@@ -13,11 +14,13 @@ interface CompaniesPageProps {
 export const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
   const [companies, setCompanies] = useState<CompanyItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         const data = await companiesService.getAll();
         const mapped: CompanyItem[] = data.map((c, index) => {
           const iconTypes: Array<CompanyItem['iconType']> = ['tree', 'gear', 'novo', 'textil', 'tech', 'building'];
@@ -36,6 +39,9 @@ export const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
         setCompanies(mapped);
       } catch (err) {
         console.error('Erro ao buscar empresas:', err);
+        setError(getApiErrorStatus(err) === 403
+          ? 'Você não tem permissão para visualizar as empresas.'
+          : 'Não foi possível carregar as empresas. Tente novamente.');
       } finally {
         setIsLoading(false);
       }
@@ -46,15 +52,15 @@ export const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
 
   return (
     <div className="flex h-screen w-screen bg-[#FAF6F0] overflow-hidden">
-      {/* Sidebar Lateral */}
+      {}
       <Sidebar currentPath="empresas" onNavigate={onNavigate} />
 
-      {/* Conteúdo Principal */}
+      {}
       <div className="flex-1 flex flex-col overflow-y-auto">
-        <Header userName="Maria Silva" onNavigate={onNavigate} />
+        <Header onNavigate={onNavigate} />
 
         <main className="p-8 sm:p-10 space-y-8 max-w-7xl">
-          {/* Header da Página */}
+          {}
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-bold text-[#3B2317] tracking-tight">
@@ -62,7 +68,7 @@ export const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
               </h2>
             </div>
 
-            {/* Filtro */}
+            {}
             <button
               title="Filtrar Empresas"
               className="p-2.5 text-[#5A4B42] hover:text-[#3B2317] hover:bg-[#EFE8DC] rounded-xl border border-[#DFD6C7] transition-all cursor-pointer"
@@ -89,9 +95,15 @@ export const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
             </div>
           )}
 
-          {!isLoading && companies.length === 0 && (
+          {!isLoading && !error && companies.length === 0 && (
             <div className="text-center py-16 bg-[#EFE8DC]/50 rounded-3xl border border-[#DFD6C7]">
               <p className="text-[#7D7068] text-sm">Nenhuma empresa encontrada.</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="text-center py-16 bg-[#EFE8DC]/50 rounded-3xl border border-[#DFD6C7]">
+              <p className="text-[#B75828] text-sm font-semibold">{error}</p>
             </div>
           )}
         </main>
@@ -99,4 +111,3 @@ export const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
     </div>
   );
 };
-

@@ -44,7 +44,9 @@ export interface LeadItem {
   status: LeadStatus;
   date: string;
   targetDate?: string;
-  // Campos detalhados usados no modal de detalhe
+  
+  createdDate: number;
+  
   email?: string;
   phone?: string;
   subject?: string;
