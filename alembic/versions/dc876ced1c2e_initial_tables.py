@@ -1,8 +1,8 @@
-"""agora sim todas as tabelas
+"""initial tables
 
-Revision ID: b4f501f67293
-Revises: 1b59e6e0c42d
-Create Date: 2026-07-14 17:30:21.831070
+Revision ID: dc876ced1c2e
+Revises: 
+Create Date: 2026-08-20 09:41:59.895664
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'b4f501f67293'
-down_revision: Union[str, Sequence[str], None] = '1b59e6e0c42d'
+revision: str = 'dc876ced1c2e'
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -25,23 +25,36 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('cnpj', sa.String(), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('cnpj'),
-    sa.UniqueConstraint('name')
+    sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_companies_cnpj'), 'companies', ['cnpj'], unique=True)
     op.create_index(op.f('ix_companies_id'), 'companies', ['id'], unique=False)
+    op.create_table('users',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('username', sa.String(), nullable=False),
+    sa.Column('hashed_password', sa.String(), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('role', sa.Enum('ADMIN', 'MANAGER', 'SALES', name='roles'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
+    op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
     op.create_table('leads',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('email', sa.String(), nullable=False),
-    sa.Column('phone', sa.String(), nullable=True),
+    sa.Column('phone', sa.String(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('company_id', sa.Integer(), nullable=True),
     sa.Column('status', sa.Enum('NEW', 'CONTACTED', 'LOST', 'WON', name='statusleads'), nullable=False),
     sa.Column('subject', sa.String(), nullable=False),
-    sa.Column('estimated_value', sa.Float(), nullable=False),
+    sa.Column('description', sa.String(), nullable=True),
+    sa.Column('estimated_value', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
@@ -57,8 +70,8 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('lead_id', sa.Integer(), nullable=False),
     sa.Column('description', sa.String(), nullable=False),
-    sa.Column('type', sa.Enum('CALL', 'MEETING', 'EMAIL', 'WHATSAPP', 'OTHER', name='activitytypedb'), nullable=False),
-    sa.Column('done_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('activity_type', sa.Enum('CALL', 'MEETING', 'EMAIL', 'WHATSAPP', 'OTHER', name='activitytype'), nullable=False),
+    sa.Column('done_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.ForeignKeyConstraint(['lead_id'], ['leads.id'], ),
@@ -70,9 +83,9 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('lead_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('status', sa.Enum('PENDING', 'ACCEPTED', 'REJECTED', name='statusproposaldb'), nullable=False),
-    sa.Column('value', sa.Float(), nullable=False),
-    sa.Column('sent_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('status', sa.Enum('PENDING', 'ACCEPTED', 'REJECTED', name='statusproposal'), nullable=False),
+    sa.Column('value', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('sent_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.ForeignKeyConstraint(['lead_id'], ['leads.id'], ),
@@ -93,6 +106,10 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_leads_name'), table_name='leads')
     op.drop_index(op.f('ix_leads_id'), table_name='leads')
     op.drop_table('leads')
+    op.drop_index(op.f('ix_users_username'), table_name='users')
+    op.drop_index(op.f('ix_users_id'), table_name='users')
+    op.drop_table('users')
     op.drop_index(op.f('ix_companies_id'), table_name='companies')
+    op.drop_index(op.f('ix_companies_cnpj'), table_name='companies')
     op.drop_table('companies')
     # ### end Alembic commands ###

@@ -1,14 +1,15 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Float
 from sqlalchemy.orm import relationship
-from app.db.database import Base
+from app.db.base import Base
 from sqlalchemy.sql import func
 
 class CompanyDB(Base):
     __tablename__ = "companies"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, nullable=False)
-    cnpj = Column(String, unique=True, nullable=False)
+    name = Column(String, nullable=False)
+    cnpj = Column(String, unique=True, nullable=False, index=True)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

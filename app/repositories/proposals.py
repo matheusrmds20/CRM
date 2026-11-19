@@ -6,24 +6,16 @@ class ProposalRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_proposal_by_id(self, user_id: int, proposal_id: int):
+    def get_proposal_by_id(self, proposal_id: int):
         return self.db.query(ProposalDB).filter(
             ProposalDB.id == proposal_id,
     ).first()
 
-    def get_proposal_by_lead_id(self, user_id: int, lead_id: int):
+    def get_proposal_by_lead_id(self, lead_id: int):
         return self.db.query(ProposalDB).filter(
             ProposalDB.lead_id == lead_id,
-    ).first()
+    ).all()
     
-    def get_proposal_by_user_id(self, user_id: int):
-        return self.db.query(ProposalDB).filter(ProposalDB.user_id == user_id).all()
-
-    def get_all_proposals(self):
-        return self.db.query(ProposalDB).filter(
-).all()
-    
-
     def create_proposal(self, user_id: int, data):
         proposal = ProposalDB(
             lead_id=data.lead_id,
@@ -58,4 +50,4 @@ class ProposalRepository:
             return proposal
         except IntegrityError as e:
             self.db.rollback()
-            raise e 
+            raise e

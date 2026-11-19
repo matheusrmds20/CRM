@@ -1,2 +1,4 @@
-from app.db.database import Base
-from app.models.users import UserDB
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()
+

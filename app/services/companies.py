@@ -1,115 +1,64 @@
 from app.repositories.companies import CompanyRepository
+from app.repositories.leads import LeadsRepository
 from sqlalchemy.orm import Session
 from app.schemas.companies import CompanyCreate, CompanyUpdate
-from app.api.exceps import ItemNotFoundError, ItemAlreadyExistsError, BadRequestError, NoPermissionError, UnauthorizedError
-
+from app.api.exceps import ItemNotFoundError, ItemAlreadyExistsError, BadRequestError, NoPermissionError
+from app.utils.permissions import can_manage_admin, can_manage_manager
 
 class CompanyService:
     def __init__(self, db: Session):
         self.repository = CompanyRepository(db)
+        self.leads_repository = LeadsRepository(db)
 
     def create_company(self, user, data: CompanyCreate):
         company_already_exists = self.repository.get_company_by_cnpj(data.cnpj)
 
-        if user.role != "admin":
-            raise NoPermissionError("Voce nao tem permissao para executar essa acao")
-
         if company_already_exists:
             raise ItemAlreadyExistsError("Company já existe")
 
-        if data.name == "":
-            raise BadRequestError("Nenhum nome foi preenchido")
-        
-        if data.cnpj == "":
-            raise BadRequestError("Nenhum cnpj foi preenchido")
-        
- 
+        if not can_manage_manager(user):
+            raise NoPermissionError("Voce nao tem permissao para executar essa acao")
+
+        data.name = data.name.lower()
 
         new_company = self.repository.create_company(data)
 
         return new_company
-    
-    def get_company_by_id(self, user, company_id: int):
-        company = self.repository.get_company_by_id(company_id)
 
-        if company.user_id != user.id and user.role != "admin" and user.role != "manager":
-            raise NoPermissionError("Voce nao tem permissao para executar essa acao")
-
-        if not company:
-            raise ItemNotFoundError("Nenhum company encontrado")
-        
-        return company
-
-    def get_company_by_cnpj(self, user, cnpj: str):
-        company = self.repository.get_company_by_cnpj(cnpj)
-
-        if company.user_id != user.id and user.role != "admin" and user.role != "manager":
-            raise NoPermissionError("Voce nao tem permissao para executar essa acao")
-
-        if not company:
-            raise ValueError("Nenhum company encontrado")
-     
-        return company
-
-    def get_company_by_name(self, user, name: str):
-        company = self.repository.get_company_by_name(name)
-
-        if company.user_id != user.id and user.role != "admin" and user.role != "manager":
-            raise NoPermissionError("Voce nao tem permissao para executar essa acao")
-
-        if not company:
-            raise ValueError("Nenhum company encontrado")
-        
-
-        
-        return company
-    
     def get_all_companies(self, user):
-        companies = self.repository.get_all_companies()
 
-        if companies.user_id != user.id and user.role != "admin" and user.role != "manager":
-            raise NoPermissionError("Voce nao tem permissao para executar essa acao")
-
-        if not companies:
-            raise ValueError("Nenhum company encontrado")
-        
-        
-        return companies
-
+        return self.repository.get_all_companies()
 
     def update_company(self, user, company_id: int, data: CompanyUpdate):
         company = self.repository.get_company_by_id(company_id)
 
-        if company.user_id != user.id and user.role != "admin" and user.role != "manager":
+        if not company:
+            raise ItemNotFoundError("Nenhum company encontrado")
+
+        if not can_manage_manager(user):
             raise NoPermissionError("Voce nao tem permissao para executar essa acao")
 
-        if not company:
-            raise ValueError("Nenhum company encontrado")
-        
-        if data.cnpj == "":
-            raise BadRequestError("Nenhum cnpj foi preenchido")
-        
-        if data.name == "":
-            raise BadRequestError("Nenhum nome foi preenchido")
-
-        
         for field, value in data.model_dump(exclude_unset=True).items():
+            if value is None:
+                continue
             setattr(company, field, value)
 
         updated_company = self.repository.update_company(company)
 
         return updated_company
-    
+
     def delete_company(self, user, company_id: int):
         company = self.repository.get_company_by_id(company_id)
-    
-        if company.user_id != user.id and user.role != "admin" and user.role != "manager":
-            raise NoPermissionError("Voce nao tem permissao para executar essa acao")
 
         if not company:
-            raise ValueError("Nenhum company encontrado")
+            raise ItemNotFoundError("Nenhum company encontrado")
 
-        
+        if not can_manage_manager(user):
+            raise NoPermissionError("Voce nao tem permissao para executar essa acao")
+
+        if self.leads_repository.count_by_company_id(company_id) > 0:
+            raise BadRequestError("Existem leads vinculados a esta empresa")
+
         to_delete = self.repository.delete_company(company)
 
         return to_delete

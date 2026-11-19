@@ -1,18 +1,15 @@
 from pydantic import BaseModel, Field, ConfigDict, EmailStr, field_validator
 from app.models.leads import StatusLeads
 from datetime import datetime
-from typing import Optional
-
-
 
 class LeadBase(BaseModel):
-    name: str = Field(min_length=3, max_length=20)
+    name: str = Field(min_length=3, max_length=100)
     email: EmailStr
-    phone: str | None = Field(min_length=3, max_length=20)
-    company_id: int | None 
-    subject: str = Field(min_length=3, max_length=20)
-    description: str | None = Field(min_length=3, max_length=20)
-    estimated_value: float | None = Field(ge=0)
+    phone: str | None = Field(min_length=9, max_length=11)
+    company_id: int | None = None
+    subject: str = Field(min_length=3, max_length=100)
+    description: str | None = Field(default=None, min_length=3, max_length=500)
+    estimated_value: float = Field(ge=0)
     status: StatusLeads = Field(default=StatusLeads.NEW)
 
     @field_validator("company_id", mode="before")
@@ -24,14 +21,14 @@ class LeadCreate(LeadBase):
     pass
 
 class LeadUpdate(BaseModel):
-    name: str | None = None
-    email: str | None = None
-    phone: str | None = None
-    company_id: int | None
+    name: str | None = Field(default=None, min_length=3, max_length=100)
+    email: EmailStr | None = None
+    phone: str | None = Field(default=None, min_length=9, max_length=11)
+    company_id: int | None = None
     status: StatusLeads | None = None
-    subject: str | None = None
-    description: str | None = None
-    estimated_value: float | None = None
+    subject: str | None = Field(default=None, min_length=3, max_length=100)
+    description: str | None = Field(default=None, min_length=3, max_length=500)
+    estimated_value: float | None = Field(default=None, ge=0)
     is_active: bool | None = None
 
     @field_validator("company_id", mode="before")
@@ -42,18 +39,16 @@ class LeadUpdate(BaseModel):
 class LeadResponse(BaseModel):
     id: int
     name: str
-    email: str
+    email: EmailStr
     phone: str | None
     company_id: int | None
     user_id: int
     subject: str
     description: str | None
     estimated_value: float | None
-    status: str
+    status: StatusLeads
     created_at: datetime
     updated_at: datetime | None
-
+    is_active: bool
 
     model_config = ConfigDict(from_attributes=True)
-
-    
